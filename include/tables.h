@@ -7,9 +7,8 @@ using namespace std;
 class Table
 {
 protected:
-	Polynom* data;
 public:
-	Table(Polynom* data_);
+	Table(Polynom* data, size_t size);
 	virtual void find(const string& name);
 	virtual void add(const string& name);
 	virtual void remove(const string& name);
