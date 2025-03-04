@@ -12,4 +12,5 @@ class List
 
 public:
 	class iterator;
+        void add(T& elem);
 };
