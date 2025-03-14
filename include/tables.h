@@ -9,7 +9,7 @@ class Table
 protected:
 public:
 	Table(Polynom* data, size_t size);
-	virtual void find(const string& name);
+	virtual Polynom* find(const string& name);
 	virtual void add(const string& name);
 	virtual void remove(const string& name);
 };
@@ -17,7 +17,7 @@ public:
 class LinearArrayTable : public Table
 {
 public:
-	void find(const string& name) override;
+	Polynom* find(const string& name) override;
 	void add(const string& name) override;
 	void remove(const string& name) override;
 };
@@ -25,7 +25,7 @@ public:
 class LinearListTable : public Table
 {
 public:
-	void find(const string& name) override;
+	Polynom* find(const string& name) override;
 	void add(const string& name) override;
 	void remove(const string& name) override;
 };
@@ -33,7 +33,7 @@ public:
 class OrderedArrayTable : public Table
 {
 public:
-	void find(const string& name) override;
+	Polynom* find(const string& name) override;
 	void add(const string& name) override;
 	void remove(const string& name) override;
 };
@@ -41,7 +41,7 @@ public:
 class TreeTable : public Table
 {
 public:
-	void find(const string& name) override;
+	Polynom* find(const string& name) override;
 	void add(const string& name) override;
 	void remove(const string& name) override;
 };
@@ -49,7 +49,7 @@ public:
 class OpenHashTable : public Table
 {
 public:
-	void find(const string& name) override;
+	Polynom* find(const string& name) override;
 	void add(const string& name) override;
 	void remove(const string& name) override;
 };
@@ -57,7 +57,7 @@ public:
 class ListHashTable : public Table
 {
 public:
-	void find(const string& name) override;
+	Polynom* find(const string& name) override;
 	void add(const string& name) override;
 	void remove(const string& name) override;
 };
