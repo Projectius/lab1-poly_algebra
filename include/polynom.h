@@ -250,7 +250,7 @@ Polynom operator*(Polynom& p1, int k)
 	return result;
 }
 
-Polynom operator-(Polynom& p1, Polynom& p2) { return p1 + (p2*(-1)); }
+Polynom operator-(Polynom& p1, Polynom& p2) { Polynom neg = p2 * (-1); return p1 + neg; }
 
 
 ostream& operator<<(ostream& os, Polynom& n)

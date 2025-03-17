@@ -2,7 +2,7 @@
 #include"tables.h"
 #include"stack.h"
 #include<vector>
-#include<postfix.h>
+#include"postfix.h"
 
 class TableManager
 {
