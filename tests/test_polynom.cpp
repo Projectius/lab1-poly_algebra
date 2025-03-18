@@ -1,5 +1,5 @@
 #include "gtest.h"
-#include "../include/polynom.h"
+#include "polynom.h"
 
 TEST(PolynomTest, can_create_polynom)
 {
