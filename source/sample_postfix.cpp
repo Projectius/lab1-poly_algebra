@@ -4,7 +4,7 @@
 
 using namespace std;
 
-int main()
+int PostfixUserInteractionTest()
 {
 	/*string expression;
 	TPostfix<int> pf(true);*/
