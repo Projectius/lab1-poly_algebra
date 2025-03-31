@@ -74,17 +74,59 @@ TEST(PolynomTest, can_copy_create_polynom)
 
 TEST(PolynomTest, copied_polynom_is_independent)
 {
-    ADD_FAILURE() << "Test not implemented";
+    Monom m(42, 1, 2, 3);
+    Monom n(55, 0, 0, 0);
+    Monom b(-33, 4, 0, 3);
+    Polynom p;
+    p.insert(m);
+    p.insert(n);
+    p.insert(b);
+    Polynom p2(p);
+    Monom w(-1, 3, 4, 5);
+    p2.insert(w);
+    ostringstream o1, o2;
+    o1 << p;
+    o2 << p2;
+    ASSERT_NE(o1.str(), o2.str());
 }
 
 TEST(PolynomTest, can_assign_polynom_to_another)
 {
-    ADD_FAILURE() << "Test not implemented";
+    Monom m(42, 1, 2, 3);
+    Monom n(55, 0, 0, 0);
+    Monom b(-33, 4, 0, 3);
+    Polynom p;
+    p.insert(m);
+    p.insert(n);
+    p.insert(b);
+    Polynom p2;
+    Monom w(-1, 3, 4, 5);
+    p2.insert(w);
+    p2 = p;
+    ostringstream o1, o2;
+    o1 << p;
+    o2 << p2;
+    ASSERT_EQ(o1.str(), o2.str());
 }
 
 TEST(PolynomTest, assign_polynom_is_independent)
 {
-    ADD_FAILURE() << "Test not implemented";
+    Monom m(42, 1, 2, 3);
+    Monom n(55, 0, 0, 0);
+    Monom b(-33, 4, 0, 3);
+    Polynom p;
+    p.insert(m);
+    p.insert(n);
+    p.insert(b);
+    Polynom p2;
+    p2 = p;
+    Monom w(-1, 3, 4, 5);
+    p2.insert(w);
+    
+    ostringstream o1, o2;
+    o1 << p;
+    o2 << p2;
+    ASSERT_NE(o1.str(), o2.str());
 }
 
 TEST(PolynomTest, can_assign_polynom_to_itself)

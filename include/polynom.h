@@ -4,7 +4,7 @@
 
 using namespace std;
 
-extern unsigned MAX_P; // Объявление глобальной переменной
+extern unsigned MAX_P;
 
 class Monom {
     unsigned degs = 0;
@@ -29,10 +29,21 @@ struct mNode {
 
 class Polynom {
     mNode* head = nullptr;
+
+    void copyFrom(const Polynom& other);
 public:
     void insert(const Monom mon);
+
+    ~Polynom();
     Polynom();
+    
     Polynom(const Polynom& y);
+
+    
+
+    Polynom& operator=(const Polynom& other);
+
+    Polynom& operator=(Polynom&& other) noexcept;
 
     friend ostream& operator<<(ostream&, Polynom&);
     friend Polynom operator+(Polynom&, Polynom&);

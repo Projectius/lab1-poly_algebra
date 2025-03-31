@@ -32,7 +32,10 @@ int Monom::coef() { return c; }
 
 mNode::mNode(const Monom m) : m(m) {}
 
+//
 // Polynom
+//
+
 void Polynom::insert(const Monom mon) {
     if (mon.c == 0)
         return;
@@ -84,41 +87,77 @@ void Polynom::insert(const Monom mon) {
 
 Polynom::Polynom() { head = new mNode(Monom(0, 0, 0, 0)); }
 
+void Polynom::copyFrom(const Polynom& other) {
+    head = new mNode(other.head->m);
+    mNode* currentOther = other.head->next; // Начинаем с первого узла после head
+    mNode* currentThis = head;
+
+    while (currentOther) {
+        currentThis->next = new mNode(currentOther->m);
+        currentThis = currentThis->next;
+        currentOther = currentOther->next;
+    }
+}
+
 Polynom::Polynom(const Polynom& y) {
-    head = new mNode(Monom(0, 0, 0, 0));
+    /*head = new mNode(Monom(0, 0, 0, 0));
     mNode* p = nullptr;
     mNode* pnext = y.head;
     while (pnext) {
         p = pnext;
         pnext = p->next;
         insert(p->m);
+    }*/
+    copyFrom(y);
+}
+
+Polynom::~Polynom() {
+    mNode* current = head;
+    while (current) {
+        mNode* next = current->next;
+        delete current;
+        current = next;
     }
 }
 
-
-//Polynom& Polynom::operator=(const Polynom& other) {
-//    if (this == &other) return *this;
 //
-//
-//    mNode* current = head;
-//    while (current) {
-//        mNode* next = current->next;
-//        delete current;
-//        current = next;
-//    }
-//
-//
-//    head = new mNode(Monom(0, 0, 0, 0));
-//    mNode* otherCurrent = other.head;
-//    while (otherCurrent) {
-//        insert(otherCurrent->m);
-//        otherCurrent = otherCurrent->next;
-//    }
-//
-//    return *this;
-//}
-
 // operators
+//
+
+Polynom& Polynom::operator=(const Polynom& other) {
+    if (this == &other) return *this;
+
+    // Удаление
+    mNode* current = head;
+    while (current) {
+        mNode* next = current->next;
+        delete current;
+        current = next;
+    }
+
+    copyFrom(other);
+    return *this;
+}
+
+Polynom& Polynom::operator=(Polynom&& other) noexcept {
+    if (this == &other) return *this;
+
+    // Удаление текущих узлов
+    mNode* current = head;
+    while (current) {
+        mNode* next = current->next;
+        delete current;
+        current = next;
+    }
+
+    // Перехват ресурсов
+    head = other.head;
+    other.head = nullptr; // Обнуляем указатель other
+
+    return *this;
+}
+
+
 Monom operator*(Monom& mon, int k) {
     Monom a;
     a.degs = mon.degs;
