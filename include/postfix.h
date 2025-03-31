@@ -90,6 +90,7 @@ template <typename T>
 class LexBase
 {
 	unordered_map<string, Lexeme*> map;
+	//use TableMANAGER!!!!
 
 public:
 	LexBase() = default;
