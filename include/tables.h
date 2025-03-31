@@ -4,6 +4,9 @@
 
 using namespace std;
 
+// Реализовать таблицы и тесты к ним
+// find возвращает nullptr если не нашёл
+
 class Table
 {
 protected:
