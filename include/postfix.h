@@ -10,7 +10,14 @@
 #include <iostream>
 #include <stdexcept>
 
+#include"managers.h"
+
 using namespace std;
+
+
+// Как сделать переменные-полиномы: хранить как значения переменных в мапе указатели на полиномы? (или лучше значения для удобства?) 
+// и при добавлении переменных в базу искать через методы tablemanager полином в таблицах чтобы присвоить его
+// Ещё и выполнять действия с миксом полином/число придётся как-то...
 
 enum LexemeType { lex, var, op, parOpen, parClose };
 
@@ -84,13 +91,16 @@ public:
 	}
 };
 
+////
 /////////////////////////////////////////
+///
 
 template <typename T>
 class LexBase
 {
 	unordered_map<string, Lexeme*> map;
-	//use TableMANAGER!!!!
+	//TableMANAGER!!!!
+	TableManager* vartable;
 
 public:
 	LexBase() = default;
