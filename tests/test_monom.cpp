@@ -1,29 +1,22 @@
 #include "gtest.h"
-#include "../include/polynom.h"
+#include "polynom.h"
+
+/////////////////////////////////////////
+
+// Многие тесты здесь бесполезны, у монома маленький функционал
+
+
+
+
 
 TEST(MonomTest, can_create_monom)
 {
-    ADD_FAILURE() << "Test not implemented";
-}
-
-TEST(MonomTest, can_create_default_monom)
-{
-    ADD_FAILURE() << "Test not implemented";
-}
-
-TEST(MonomTest, can_create_monom_with_positive_coef)
-{
-    ADD_FAILURE() << "Test not implemented";
-}
-
-TEST(MonomTest, can_create_monom_with_negative_coef)
-{
-    ADD_FAILURE() << "Test not implemented";
+    ASSERT_NO_THROW(Monom m(42, 1, 2, 3));
 }
 
 TEST(MonomTest, throws_exception_for_monom_with_excessive_degrees)
 {
-    ADD_FAILURE() << "Test not implemented";
+    ASSERT_ANY_THROW(Monom m(42, MAX_P, 2, 3));
 }
 
 TEST(MonomTest, can_create_monom_with_positive_coef_from_string)

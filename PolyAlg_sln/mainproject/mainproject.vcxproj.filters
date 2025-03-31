@@ -15,30 +15,27 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\tables.h">
+    <ClInclude Include="..\..\include\list.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="include\list.h">
+    <ClInclude Include="..\..\include\managers.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="include\polynom.h">
+    <ClInclude Include="..\..\include\polynom.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="include\stack.h">
+    <ClInclude Include="..\..\include\postfix.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="include\managers.h">
+    <ClInclude Include="..\..\include\stack.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="include\postfix.h">
+    <ClInclude Include="..\..\include\tables.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="source\sample_polynom.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="source\sample_postfix.cpp">
+    <ClCompile Include="..\..\source\MainProgram.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>

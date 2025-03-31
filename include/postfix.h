@@ -197,16 +197,16 @@ public:
 
 				postfix.push_back(base.addVar(token));
 
-				//Попытаемся сразу определить если это число
-				try {
-					double num = stod(token);
-					if (!isnan(num))
-					{
-						setVariable(token, num);
-						//cout << "CAN NUM " << num << endl;
-					}
-				}
-				catch (exception e) {}
+				//НЕ Попытаемся сразу определить если это число
+				//try {
+				//	double num = stod(token);
+				//	if (!isnan(num))
+				//	{
+				//		setVariable(token, num);
+				//		//cout << "CAN NUM " << num << endl;
+				//	}
+				//}
+				//catch (exception e) {}
 
 
 				////cout << "New var " << endl;
