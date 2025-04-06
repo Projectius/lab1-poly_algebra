@@ -27,17 +27,15 @@ class Lexeme
 	
 protected:
 	bool defined = false;
-	string name;
 	LexemeType type = LexemeType::Undef;
 public:
 	Lexeme() { throw logic_error("Lexem default constructor should not be called. Invalid container usage."); } // Никогда не должен вызываться, может вызваться при неправильном использовании контейнеров и требуется для сборки
-	Lexeme(string name_) :name(name_) { //cout << "HELLO :" << name_ << ":" << endl; 
+	Lexeme() { //cout << "HELLO :" << name_ << ":" << endl; 
 	};
-	Lexeme(string name_, bool defined) :name(name_), defined(defined) {};
-	explicit Lexeme(string name_, LexemeType type, bool defined) :name(name_), type(type), defined(defined) {};
+	Lexeme( bool defined) : defined(defined) {};
+	explicit Lexeme( LexemeType type, bool defined) : type(type), defined(defined) {};
 	LexemeType getType() { return type; }
 	virtual int getPriority() const { return -1; } // Приоритет скобок -1
-	string getName() { return name; }
 	virtual void define() { defined = true; //cout << defined << " defined " << name << endl; 
 	}
 	bool isDefined() { return defined; }
@@ -48,7 +46,7 @@ public:
 ostream& operator<<(ostream& out, Lexeme& lex)
 {
 	//cout << " <<" << lex.name << endl;
-	return out << lex.name;
+	return out << "LEX("<<int(lex.type)<<")";
 }
 
 //////////////////////////////////////////
@@ -68,7 +66,7 @@ enum class OperandType {Number, Polynom};
 class Operand : public Lexeme
 {
 public:
-	Operand(string name, bool defined) :Lexeme(name, LexemeType::Operand, defined) {};
+	Operand(bool defined) :Lexeme( LexemeType::Operand, defined) {};
 	virtual OperandType getType() const  = 0;
 	virtual ~Operand() = default;
 };
@@ -77,7 +75,7 @@ public:
 class Number : public Operand {
 	double value;
 public:
-	Number(double val) : Operand(name, true), value(val) {};
+	Number(double val) : Operand(true), value(val) {};
 	OperandType getType() const override { return OperandType::Number; }
 	double getValue() const { return value; }
 	void define(double val) { value = val; }
@@ -106,8 +104,8 @@ class Operator : public Lexeme
 
 
 public:
-	explicit Operator(string name_, int argCount_, int priority_, OperatorType optorType_, Associativity associativity_ = Associativity::Left)
-		: Lexeme(name_, LexemeType::Operator, true), argCount(argCount_), priority(priority_), func(optorType_), associativity(associativity_)
+	explicit Operator(int argCount_, int priority_, OperatorType optorType_, Associativity associativity_ = Associativity::Left)
+		: Lexeme(LexemeType::Operator, true), argCount(argCount_), priority(priority_), func(optorType_), associativity(associativity_)
 	{
 		if (argCount == 1)
 			priority = 255;
@@ -139,7 +137,7 @@ public:
 template <typename T>
 class LexBase
 {
-	unordered_map<string, Lexeme*> map;
+	unordered_map<string, shared_ptr<Lexeme>> map;
 	//TableMANAGER!!!!
 	TableManager* vartable;
 
@@ -152,27 +150,37 @@ public:
 		}
 	}
 
-	Lexeme* addVar(string name)
+	void addNum(string name, double value)
 	{
 		auto it = map.find(name);
 		if (it == map.end())
 		{
-			Variable<T>* nvar = new Variable<T>(name);
-			map.emplace(name, nvar);
+			
+			map.emplace(name, make_shared<Number>(value));
 			//cout << "ADDED VAR :" << nvar->getName() << ":" << endl;
-			return nvar;
+			return;
 		}
-		return it->second;
+		throw "ADD existing lexeme";
 	}
 
-	Lexeme* addOperator(string name, int argCount, int priority, function<T(T, T)> operation, Associativity associativity = Associativity::Left) {
-		Operator<T>* nOp = new Operator<T>(name, argCount, priority, move(operation), associativity);
-		map.emplace(name, nOp);
+	void addPoly(string name)
+	{
+		auto it = map.find(name);
+		if (it == map.end())
+		{
+
+			//not implemented
+			return;
+		}
+		throw "ADD existing lexeme";
+	}
+
+	void addOperator(string name, int argCount, int priority,OperatorType::optorType, Associativity associativity = Associativity::Left) {
+		map.emplace(name, make_shared<Operator>(argCount,priority,optorType, associativity));
 		//cout << "ADDED OPERATOR: " << nOp->getName() << " with priority " << nOp->getPriority() << " and associativity " << (associativity == Associativity::Left ? "Left" : "Right") << endl;
-		return nOp;
 	}
 
-	Lexeme* getLexeme(string name)
+	shared_ptr<Lexeme> getLexeme(string name)
 	{
 		auto it = map.find(name);
 		if (it != map.end())
@@ -181,8 +189,7 @@ public:
 	}
 
 	void addLexeme(string name, LexemeType type, bool defined = false) { //Только для вспомогательных лексем без функционала
-		Lexeme* nlex = new Lexeme(name, type, defined);
-		map.emplace(name, nlex);
+		map.emplace(name, make_shared<Lexeme>(type, defined));
 		//cout << "ADDED LEX :" << lex.getName() << ":" << endl;
 	}
 
@@ -204,8 +211,8 @@ class TPostfix
 {
 	LexBase<T> base;
 	string infix;
-	vector<Lexeme*> postfix;
-	TStack<Lexeme*> opStack;
+	vector<shared_ptr<Lexeme>> postfix;
+	TStack<shared_ptr<Operator>> opStack;
 
 public:
 
@@ -213,10 +220,10 @@ public:
 	{
 
 		if (importBasicOperators) {
-			base.addOperator("+", 2, 0, [](T a, T b) { return a + b; });
-			base.addOperator("-", 2, 0, [](T a, T b) { return a - b; });
-			base.addOperator("*", 2, 1, [](T a, T b) { return a * b; });
-			base.addOperator("/", 2, 1, [](T a, T b) { return a / b; });
+			base.addOperator("+", 2, 0, OperatorType::Add);
+			//base.addOperator("-", 2, 0, [](T a, T b) { return a - b; });
+			//base.addOperator("*", 2, 1, [](T a, T b) { return a * b; });
+			//base.addOperator("/", 2, 1, [](T a, T b) { return a / b; });
 
 			base.addLexeme("(", LexemeType::ParOpen, 1);
 			base.addLexeme(")", LexemeType::ParClose, 1);
