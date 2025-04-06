@@ -11,7 +11,7 @@ class TableManager
 public:
 	TableManager();
 	void selectTable(int tindex);
-	Polynom find(const string name);
+	Polynom* find(const string name);
 	void add(const string name);
 	void remove(const string name);
 };

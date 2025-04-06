@@ -11,6 +11,7 @@
 #include <stdexcept>
 
 #include"managers.h"
+#include"polynom.h"
 
 using namespace std;
 
@@ -19,7 +20,7 @@ using namespace std;
 // и при добавлении переменных в базу искать через методы tablemanager полином в таблицах чтобы присвоить его
 // Ещё и выполнять действия с миксом полином/число придётся как-то...
 
-enum LexemeType { lex, var, op, parOpen, parClose };
+enum class LexemeType { Undef, Operand, Operator , ParOpen, ParClose };
 
 class Lexeme
 {
@@ -27,7 +28,7 @@ class Lexeme
 protected:
 	bool defined = false;
 	string name;
-	LexemeType type = LexemeType::lex;
+	LexemeType type = LexemeType::Undef;
 public:
 	Lexeme() { throw logic_error("Lexem default constructor should not be called. Invalid container usage."); } // Никогда не должен вызываться, может вызваться при неправильном использовании контейнеров и требуется для сборки
 	Lexeme(string name_) :name(name_) { //cout << "HELLO :" << name_ << ":" << endl; 
@@ -51,31 +52,62 @@ ostream& operator<<(ostream& out, Lexeme& lex)
 }
 
 //////////////////////////////////////////
-template <class T>
-class Variable : public Lexeme
+//template <class T>
+//class Variable : public Lexeme
+//{
+//	T value;
+//public:
+//	Variable(string name) : Lexeme(name, LexemeType::var, false) {}
+//	void define(T& value_) { value = value_; defined = true; }
+//	T& getValue() { return value; }
+//	//T* getValuePointer() { return &value; }
+//};
+
+enum class OperandType {Number, Polynom};
+
+class Operand : public Lexeme
 {
-	T value;
 public:
-	Variable(string name) : Lexeme(name, LexemeType::var, false) {}
-	void define(T& value_) { value = value_; defined = true; }
-	T& getValue() { return value; }
-	//T* getValuePointer() { return &value; }
+	Operand(string name, bool defined) :Lexeme(name, LexemeType::Operand, defined) {};
+	virtual OperandType getType() const  = 0;
+	virtual ~Operand() = default;
+};
+
+
+class Number : public Operand {
+	double value;
+public:
+	Number(double val) : Operand(name, true), value(val) {};
+	OperandType getType() const override { return OperandType::Number; }
+	double getValue() const { return value; }
+	void define(double val) { value = val; }
+};
+
+class PolynomialRef : public Operand {
+	Polynom* polyP;
+public:
+	OperandType getType() const override { return OperandType::Polynom; }
+	Polynom& getPolynom() const {
+		return *polyP;
+	}
+	void define(Polynom* polynomPointer) { polyP = polynomPointer; }
 };
 
 //////////////////////////////////////////
 enum class Associativity { Left, Right };
+enum class OperatorType{Add, Sub, Mul, Div};
 
-template <typename T>
 class Operator : public Lexeme
 {
+	OperatorType func;
 	int argCount;
 	int priority;
 	Associativity associativity;
-	function<T(T, T)> operation;
+
 
 public:
-	explicit Operator(string name_, int argCount_, int priority_, function<T(T, T)> operation_, Associativity associativity_ = Associativity::Left)
-		: Lexeme(name_, LexemeType::op, true), argCount(argCount_), priority(priority_), operation(move(operation_)), associativity(associativity_)
+	explicit Operator(string name_, int argCount_, int priority_, OperatorType optorType_, Associativity associativity_ = Associativity::Left)
+		: Lexeme(name_, LexemeType::Operator, true), argCount(argCount_), priority(priority_), func(optorType_), associativity(associativity_)
 	{
 		if (argCount == 1)
 			priority = 255;
@@ -86,8 +118,17 @@ public:
 	int getArgCount() const { return argCount; }
 	Associativity getAssociativity() const { return associativity; }
 
-	T Execute(T a, T b = T{}) const {
-		return operation(a, b); // Если оператор унарный, b просто игнорируется
+	Number* ExecNum(Number* op1, Number* op2)
+	{
+
+	}
+
+	Operand* Execute(Operand* a, Operand* b) const {
+		
+		if (func == OperatorType::Add)
+		{
+			return 
+		}
 	}
 };
 
@@ -177,8 +218,8 @@ public:
 			base.addOperator("*", 2, 1, [](T a, T b) { return a * b; });
 			base.addOperator("/", 2, 1, [](T a, T b) { return a / b; });
 
-			base.addLexeme("(", LexemeType::parOpen, 1);
-			base.addLexeme(")", LexemeType::parClose, 1);
+			base.addLexeme("(", LexemeType::ParOpen, 1);
+			base.addLexeme(")", LexemeType::ParClose, 1);
 		}
 	}
 
@@ -256,17 +297,17 @@ public:
 					}
 					opStack.push(lex); // Добавляем текущий оператор в стек
 				}
-				else if (type == LexemeType::parOpen) {
+				else if (type == LexemeType::ParOpen) {
 					// Если открывающая скобка, добавляем её в стек операторов
 					opStack.push(lex);
 				}
-				else if (type == LexemeType::parClose) {
+				else if (type == LexemeType::ParClose) {
 					// Если закрывающая скобка, выталкиваем операторы в постфикс до открывающей скобки
-					while (!opStack.empty() && opStack.get_top()->getType() != LexemeType::parOpen) {
+					while (!opStack.empty() && opStack.get_top()->getType() != LexemeType::ParOpen) {
 						postfix.push_back(opStack.get_top());
 						opStack.pop();
 					}
-					if (!opStack.empty() && opStack.get_top()->getType() == LexemeType::parOpen) {
+					if (!opStack.empty() && opStack.get_top()->getType() == LexemeType::ParOpen) {
 						opStack.pop(); // Убираем открывающую скобку из стека
 					}
 				}
@@ -280,7 +321,7 @@ public:
 
 		// Перемещаем оставшиеся операторы в постфикс
 		while (!opStack.empty()) {
-			if (opStack.get_top()->getType() == LexemeType::parOpen) {
+			if (opStack.get_top()->getType() == LexemeType::ParOpen) {
 				opStack.pop(); // Удаляем открывающую скобку, если она осталась
 			}
 			else {
@@ -369,13 +410,13 @@ public:
 		return false;
 	}
 
-	T Calculate()
+	Operand* Calculate()
 	{
 		if (checkForUndefinedVars())
 			throw logic_error("Calculating when some variables are not defined");
 		if (!postfix.size())
 			throw logic_error("Calculate when no postfix");
-		TStack<T> calcStack;
+		TStack<Operand*> calcStack;
 		for (auto lexeme : postfix) {
 			if (lexeme->getType() == LexemeType::var) {
 				// Если лексема — переменная, добавляем её значение в стек
@@ -387,13 +428,13 @@ public:
 
 				if (argCount == 1) {
 					// Для унарного оператора извлекаем один операнд
-					T operand = calcStack.get_top(); calcStack.pop();
+					Operand* operand = calcStack.get_top(); calcStack.pop();
 					calcStack.push(op->Execute(operand));
 				}
 				else if (argCount == 2) {
 					// Для бинарного оператора извлекаем два операнда
-					T op2 = calcStack.get_top(); calcStack.pop();
-					T op1 = calcStack.get_top(); calcStack.pop();
+					Operand* op2 = calcStack.get_top(); calcStack.pop();
+					Operand* op1 = calcStack.get_top(); calcStack.pop();
 
 					// Выполняем операцию и помещаем результат в стек
 					calcStack.push(op->Execute(op1, op2));
