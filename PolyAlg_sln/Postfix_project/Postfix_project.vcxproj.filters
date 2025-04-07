@@ -21,6 +21,9 @@
     <ClCompile Include="..\..\source\sample_postfix.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\tests\Tests_postfix.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\postfix.h">

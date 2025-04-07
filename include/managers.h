@@ -1,6 +1,6 @@
 #pragma once
 #include"tables.h"
-#include"stack.h"
+//#include"TStack.h"
 #include<vector>
 #include"postfix.h"
 
@@ -19,7 +19,7 @@ public:
 class CommandManager
 {
 	TableManager tableman;
-	TPostfix<Polynom> postfixman;
+	Postfix pf;
 
 	Polynom parsePolynom(const string& pstr);
 	void processExpr(const string& estr);

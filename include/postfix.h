@@ -2,7 +2,7 @@
 
 #include <string>
 #include <vector>
-#include "stack.h"
+#include "TStack.h"
 #include <functional>
 #include <unordered_map>
 #include <sstream>
@@ -30,8 +30,7 @@ protected:
 	LexemeType type = LexemeType::Undef;
 public:
 	Lexeme() { throw logic_error("Lexem default constructor should not be called. Invalid container usage."); } // Никогда не должен вызываться, может вызваться при неправильном использовании контейнеров и требуется для сборки
-	Lexeme() { //cout << "HELLO :" << name_ << ":" << endl; 
-	};
+
 	Lexeme( bool defined) : defined(defined) {};
 	explicit Lexeme( LexemeType type, bool defined) : type(type), defined(defined) {};
 	LexemeType getType() { return type; }
@@ -116,17 +115,22 @@ public:
 	int getArgCount() const { return argCount; }
 	Associativity getAssociativity() const { return associativity; }
 
-	Number* ExecNum(Number* op1, Number* op2)
-	{
+	//Number* ExecNum(Number* op1, Number* op2)
+	//{
 
-	}
+	//}
 
-	Operand* Execute(Operand* a, Operand* b) const {
-		
+	shared_ptr<Operand> Execute(shared_ptr<Operand> a, shared_ptr<Operand> b = 0) const {
+
+		auto numA = dynamic_pointer_cast<Number>(a);
+		auto numB = dynamic_pointer_cast<Number>(b);
+
 		if (func == OperatorType::Add)
 		{
-			return 
+			return make_shared<Number>(numA->getValue() + numB->getValue());
 		}
+
+		return nullptr;
 	}
 };
 
@@ -134,7 +138,7 @@ public:
 /////////////////////////////////////////
 ///
 
-template <typename T>
+
 class LexBase
 {
 	unordered_map<string, shared_ptr<Lexeme>> map;
@@ -145,9 +149,9 @@ public:
 	LexBase() = default;
 
 	~LexBase() {
-		for (auto& pair : map) {
-			delete pair.second;
-		}
+		//for (auto& pair : map) {
+		//	delete pair.second;
+		//}
 	}
 
 	void addNum(string name, double value)
@@ -175,7 +179,7 @@ public:
 		throw "ADD existing lexeme";
 	}
 
-	void addOperator(string name, int argCount, int priority,OperatorType::optorType, Associativity associativity = Associativity::Left) {
+	void addOperator(string name, int argCount, int priority,OperatorType optorType, Associativity associativity = Associativity::Left) {
 		map.emplace(name, make_shared<Operator>(argCount,priority,optorType, associativity));
 		//cout << "ADDED OPERATOR: " << nOp->getName() << " with priority " << nOp->getPriority() << " and associativity " << (associativity == Associativity::Left ? "Left" : "Right") << endl;
 	}
@@ -206,17 +210,16 @@ public:
 ///////////////////////////////////////
 
 
-template<typename T>
-class TPostfix
+class Postfix
 {
-	LexBase<T> base;
+	LexBase base;
 	string infix;
 	vector<shared_ptr<Lexeme>> postfix;
-	TStack<shared_ptr<Operator>> opStack;
+	TStack<Lexeme*> opStack;
 
 public:
 
-	TPostfix(bool importBasicOperators)
+	Postfix(bool importBasicOperators = true)
 	{
 
 		if (importBasicOperators) {
@@ -245,7 +248,7 @@ public:
 		string token;
 
 		while (iss >> token) {
-			Lexeme* lex = base.getLexeme(token);
+			shared_ptr<Lexeme> lex = base.getLexeme(token);
 			//cout << "Got token " << token << endl;
 
 			if (lex == nullptr) {
@@ -254,18 +257,18 @@ public:
 				if (token.find_first_of('()') != string::npos)
 					throw runtime_error("Variable name or number fused with parentheses");
 
-				postfix.push_back(base.addVar(token));
+				//postfix.push_back(base.addVar(token));
 
-				//НЕ Попытаемся сразу определить если это число
-				//try {
-				//	double num = stod(token);
-				//	if (!isnan(num))
-				//	{
-				//		setVariable(token, num);
-				//		//cout << "CAN NUM " << num << endl;
-				//	}
-				//}
-				//catch (exception e) {}
+				//Попытаемся сразу определить если это число
+				try {
+					double num = stod(token);
+					if (!isnan(num))
+					{
+						postfix.push_back(make_shared<Number>(num));
+						//cout << "CAN NUM " << num << endl;
+					}
+				}
+				catch (exception e) {}
 
 
 				////cout << "New var " << endl;
@@ -275,15 +278,15 @@ public:
 				//cout << "Found lexeme: " << lex->getName() << " Type: " << lex->getType() << " Priority: " << lex->getPriority() << endl;
 				LexemeType type = lex->getType();
 
-				if (type == LexemeType::var) {
+				if (type == LexemeType::Operand) {
 					// Если лексема — переменная, добавляем её в постфиксное выражение
 					postfix.push_back(lex);
 				}
-				else if (type == LexemeType::op) {
+				else if (type == LexemeType::Operator) {
 					// Если это оператор, обрабатываем приоритеты и ассоциативность
-					auto* op = dynamic_cast<Operator<T>*>(lex);
-					while (!opStack.empty() && opStack.get_top()->getType() == LexemeType::op) {
-						auto* topOp = dynamic_cast<Operator<T>*>(opStack.get_top());
+					auto* op = dynamic_cast<Operator*>(lex.get());
+					while (!opStack.empty() && opStack.get_top()->getType() == LexemeType::Operator) {
+						auto* topOp = dynamic_cast<Operator*>(opStack.get_top());
 
 						// Проверка на приоритет и ассоциативность
 						bool shouldPop;
@@ -295,23 +298,23 @@ public:
 						}
 
 						if (shouldPop) {
-							postfix.push_back(opStack.get_top());
+							postfix.push_back(shared_ptr<Lexeme>(opStack.get_top()));
 							opStack.pop();
 						}
 						else {
 							break;
 						}
 					}
-					opStack.push(lex); // Добавляем текущий оператор в стек
+					opStack.push(lex.get()); // Добавляем текущий оператор в стек
 				}
 				else if (type == LexemeType::ParOpen) {
 					// Если открывающая скобка, добавляем её в стек операторов
-					opStack.push(lex);
+					opStack.push(lex.get());
 				}
 				else if (type == LexemeType::ParClose) {
 					// Если закрывающая скобка, выталкиваем операторы в постфикс до открывающей скобки
 					while (!opStack.empty() && opStack.get_top()->getType() != LexemeType::ParOpen) {
-						postfix.push_back(opStack.get_top());
+						postfix.push_back(shared_ptr<Lexeme>(opStack.get_top()));
 						opStack.pop();
 					}
 					if (!opStack.empty() && opStack.get_top()->getType() == LexemeType::ParOpen) {
@@ -332,7 +335,7 @@ public:
 				opStack.pop(); // Удаляем открывающую скобку, если она осталась
 			}
 			else {
-				postfix.push_back(opStack.get_top());
+				postfix.push_back(shared_ptr<Lexeme>(opStack.get_top()));
 				//cout << "END Popping " << opStack.get_top()->getName() << " stack size " << endl;
 				opStack.pop();
 			}
@@ -349,99 +352,104 @@ public:
 		string res;
 		for (int i = 0; i < postfix.size(); i++) {
 			//cout << "res " << postfix[i]->getName() << endl;
-			res += postfix[i]->getName() + " ";
+			res += to_string(((int)postfix[i]->getType()))+' ';
 		}
 		return res;
 	}
 
-	void addOperator(const string& name, int argCount, int priority, function<T(T, T)> operation) {
-		base.addOperator(name, argCount, priority, operation);
+	void addOperator(string name, int argCount, int priority, OperatorType optorType, Associativity associativity = Associativity::Left) {
+		base.addOperator(name, argCount, priority, optorType, associativity);
 	}
 
-	void setVariable(const string& name, T value) {
-		Lexeme* lex = base.getLexeme(name);
-		if (lex && lex->getType() == LexemeType::var) {
-			dynamic_cast<Variable<T>*>(lex)->define(value);
-		}
-		else {
-			//cout << "Variable not found: " << name << endl;
-			throw logic_error("Variable not found: " + name);
-		}
-	}
+	//Функционал с неопределёнными переменными и доопределением пока не поддерживатеся
+	
+	//void setVariable(const string& name, T value) {
+	//	Lexeme* lex = base.getLexeme(name);
+	//	if (lex && lex->getType() == LexemeType::var) {
+	//		dynamic_cast<Variable<T>*>(lex)->define(value);
+	//	}
+	//	else {
+	//		//cout << "Variable not found: " << name << endl;
+	//		throw logic_error("Variable not found: " + name);
+	//	}
+	//}
+	//
+	//void setVariables(const vector<pair<string, T>>& vars) {
+	//	for (const auto& var : vars) {
+	//		setVariable(var.first, var.second);
+	//	}
+	//}
+	//
+	//vector<string> getUndefinedVars() {
+	//	vector<string> undefinedVars;
+	//	for (const auto& lexemePair : base.getAllLexemes()) {
+	//		Lexeme* lexeme = lexemePair.second;
+	//		if (lexeme->getType() == LexemeType::var) {
+	//			Variable<T>* var = static_cast<Variable<T>*>(lexeme);
+	//			if (!var->isDefined()) {
+	//				undefinedVars.push_back(var->getName());
+	//			}
+	//		}
+	//	}
+	//	return undefinedVars;
+	//}
+	//
+	//vector<string> getOperatorNames() {
+	//	vector<string > ops;
+	//	for (const auto& lexemePair : base.getAllLexemes()) {
+	//		Lexeme* lexeme = lexemePair.second;
+	//		if (lexeme->getType() == LexemeType::op) {
+	//
+	//			ops.push_back(lexeme->getName());
+	//
+	//		}
+	//	}
+	//	return ops;
+	//}
+	//
+	//bool checkForUndefinedVars()
+	//{
+	//	for (const auto& lexemePair : base.getAllLexemes()) {
+	//		Lexeme* lexeme = lexemePair.second;
+	//		if (lexeme->getType() == LexemeType::var) {
+	//			//Variable<T>* var = static_cast<Variable<T>*>(lexeme);
+	//			if (!lexeme->isDefined()) {
+	//				//cout << "ud "<< lexeme->getName() << endl;
+	//				return true;
+	//			}
+	//		}
+	//	}
+	//	return false;
+	//}
 
-	void setVariables(const vector<pair<string, T>>& vars) {
-		for (const auto& var : vars) {
-			setVariable(var.first, var.second);
-		}
-	}
-
-	vector<string> getUndefinedVars() {
-		vector<string> undefinedVars;
-		for (const auto& lexemePair : base.getAllLexemes()) {
-			Lexeme* lexeme = lexemePair.second;
-			if (lexeme->getType() == LexemeType::var) {
-				Variable<T>* var = static_cast<Variable<T>*>(lexeme);
-				if (!var->isDefined()) {
-					undefinedVars.push_back(var->getName());
-				}
-			}
-		}
-		return undefinedVars;
-	}
-
-	vector<string> getOperatorNames() {
-		vector<string > ops;
-		for (const auto& lexemePair : base.getAllLexemes()) {
-			Lexeme* lexeme = lexemePair.second;
-			if (lexeme->getType() == LexemeType::op) {
-
-				ops.push_back(lexeme->getName());
-
-			}
-		}
-		return ops;
-	}
-
-	bool checkForUndefinedVars()
+	shared_ptr<Operand> Calculate()
 	{
-		for (const auto& lexemePair : base.getAllLexemes()) {
-			Lexeme* lexeme = lexemePair.second;
-			if (lexeme->getType() == LexemeType::var) {
-				//Variable<T>* var = static_cast<Variable<T>*>(lexeme);
-				if (!lexeme->isDefined()) {
-					//cout << "ud "<< lexeme->getName() << endl;
-					return true;
-				}
-			}
-		}
-		return false;
-	}
-
-	Operand* Calculate()
-	{
-		if (checkForUndefinedVars())
-			throw logic_error("Calculating when some variables are not defined");
+		/*if (checkForUndefinedVars())
+			throw logic_error("Calculating when some variables are not defined");*/
 		if (!postfix.size())
 			throw logic_error("Calculate when no postfix");
-		TStack<Operand*> calcStack;
+
+
+		TStack<shared_ptr<Operand>> calcStack;
+
 		for (auto lexeme : postfix) {
-			if (lexeme->getType() == LexemeType::var) {
+			if (lexeme->getType() == LexemeType::Operand) {
 				// Если лексема — переменная, добавляем её значение в стек
-				calcStack.push(static_cast<Variable<T>*>(lexeme)->getValue());
+				calcStack.push(dynamic_pointer_cast<Operand>(lexeme));
 			}
-			else if (lexeme->getType() == LexemeType::op) {
-				auto* op = static_cast<Operator<T>*>(lexeme);
+			else if (lexeme->getType() == LexemeType::Operator) {
+				auto op = dynamic_pointer_cast<Operator>(lexeme);
 				int argCount = op->getArgCount();
 
 				if (argCount == 1) {
 					// Для унарного оператора извлекаем один операнд
-					Operand* operand = calcStack.get_top(); calcStack.pop();
+					auto operand = calcStack.get_top(); calcStack.pop();
 					calcStack.push(op->Execute(operand));
 				}
 				else if (argCount == 2) {
 					// Для бинарного оператора извлекаем два операнда
-					Operand* op2 = calcStack.get_top(); calcStack.pop();
-					Operand* op1 = calcStack.get_top(); calcStack.pop();
+					auto op2 = calcStack.get_top(); calcStack.pop();
+					auto op1 = calcStack.get_top(); calcStack.pop();
 
 					// Выполняем операцию и помещаем результат в стек
 					calcStack.push(op->Execute(op1, op2));
