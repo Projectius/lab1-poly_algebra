@@ -481,10 +481,10 @@ public:
 	{
 		cout << "POSTFIX DELETING\n";
 
-	//	for (auto& ptr : postfix) {
-	//		ptr.reset();
-	//	}
-	//	postfix.clear();
-	//}
+		for (auto& ptr : postfix) {
+			ptr.reset();
+		}
+		postfix.clear();
+	}
 };
 

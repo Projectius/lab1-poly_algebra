@@ -19,7 +19,7 @@ public:
 class CommandManager
 {
 	TableManager tableman;
-	Postfix pf;
+
 
 	Polynom parsePolynom(const string& pstr);
 	void processExpr(const string& estr);

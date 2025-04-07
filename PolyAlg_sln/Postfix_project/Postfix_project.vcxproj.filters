@@ -18,10 +18,7 @@
     <ClCompile Include="..\..\tests\test_main.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\source\sample_postfix.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\tests\Tests_postfix.cpp">
+    <ClCompile Include="..\..\tests\test_postfix.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>
