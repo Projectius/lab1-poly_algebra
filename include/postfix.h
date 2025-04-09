@@ -2,7 +2,9 @@
 
 #include <string>
 #include <vector>
-#include "TStack.h"
+//#include "TStack.h"
+#include <stack>
+
 #include <functional>
 #include <unordered_map>
 #include <sstream>
@@ -41,6 +43,8 @@ public:
 	virtual ~Lexeme() {};
 	friend ostream& operator<<(ostream&, Lexeme&);
 };
+
+void printLex(Lexeme*);
 
 ostream& operator<<(ostream& out, Lexeme& lex)
 {
@@ -113,6 +117,7 @@ public:
 
 	int getPriority() const override { return priority; }
 	int getArgCount() const { return argCount; }
+	OperatorType getOperatorType() { return func; }
 	Associativity getAssociativity() const { return associativity; }
 
 	//Number* ExecNum(Number* op1, Number* op2)
@@ -121,18 +126,65 @@ public:
 	//}
 
 	shared_ptr<Operand> Execute(shared_ptr<Operand> a, shared_ptr<Operand> b = 0) const {
-
+		//cout << "EXEC ";printLex(a.get());printLex(b.get());
+		if (a == 0)
+			throw runtime_error("No arguments");
 		auto numA = dynamic_pointer_cast<Number>(a);
-		auto numB = dynamic_pointer_cast<Number>(b);
-
-		if (func == OperatorType::Add)
+		if(argCount == 2)
 		{
-			return make_shared<Number>(numA->getValue() + numB->getValue());
+			if (b == 0)
+				throw runtime_error("Not enough arguments");
+			auto numB = dynamic_pointer_cast<Number>(b);
+
+			if (func == OperatorType::Add)
+			{
+				return make_shared<Number>(numA->getValue() + numB->getValue());
+			}
+			if (func == OperatorType::Sub)
+			{
+				return make_shared<Number>(numA->getValue() - numB->getValue());
+			}
+			if (func == OperatorType::Mul)
+			{
+				return make_shared<Number>(numA->getValue() * numB->getValue());
+			}
 		}
+
+		
 
 		return nullptr;
 	}
 };
+
+void printLex(shared_ptr<Lexeme> l)
+{
+	//cout << l<<"("<<l.use_count()<<")" << "_";
+	if (l == nullptr) { cout << "NULLLEX";return; }
+	LexemeType lt = l->getType();
+	if (lt == LexemeType::Undef)
+		cout << "[?]";
+	else if (lt == LexemeType::Operand)
+	{
+		auto od = dynamic_pointer_cast<Operand>(l);
+		if (auto nu = dynamic_pointer_cast<Number> (od))
+			cout << "{" << nu->getValue() << "}";
+	}
+	else if (lt == LexemeType::Operator)
+	{
+		auto op = dynamic_pointer_cast<Operator>(l);
+		cout << "[OP" << static_cast<int>(op->getOperatorType()) << "]";
+	}
+	else if (lt == LexemeType::ParOpen)
+	{
+		cout << " ( ";
+	}
+	else if (lt == LexemeType::ParClose)
+	{
+		cout << " ) ";
+	}
+
+	else { cout << "??? "; }
+}
 
 ////
 /////////////////////////////////////////
@@ -215,7 +267,7 @@ class Postfix
 	LexBase base;
 	string infix;
 	vector<shared_ptr<Lexeme>> postfix;
-	TStack<Lexeme*> opStack;
+	stack<shared_ptr<Lexeme>> opStack;
 	shared_ptr<Operand> result;
 
 public:
@@ -225,9 +277,9 @@ public:
 
 		if (importBasicOperators) {
 			base.addOperator("+", 2, 0, OperatorType::Add);
-			//base.addOperator("-", 2, 0, [](T a, T b) { return a - b; });
-			//base.addOperator("*", 2, 1, [](T a, T b) { return a * b; });
-			//base.addOperator("/", 2, 1, [](T a, T b) { return a / b; });
+			base.addOperator("-", 2, 0, OperatorType::Sub);
+			base.addOperator("*", 2, 1, OperatorType::Mul);
+			base.addOperator("/", 2, 1, OperatorType::Div);
 
 			base.addLexeme("(", LexemeType::ParOpen, 1);
 			base.addLexeme(")", LexemeType::ParClose, 1);
@@ -250,17 +302,15 @@ public:
 
 		while (iss >> token) {
 			shared_ptr<Lexeme> lex = base.getLexeme(token);
-			cout << "Got token " << token << endl;
+			//cout << "Got token " << token << endl;
 
 			if (lex == nullptr) {
 				// Если лексема не найдена, добавляем как новую переменную
 
-				if (token.find_first_of('()') != string::npos)
+				if (token.find_first_of("()") != string::npos)
 					throw runtime_error("Variable name or number fused with parentheses");
 
-				//postfix.push_back(base.addVar(token));
-
-				//Попытаемся сразу определить если это число
+				// Попытаемся сразу определить если это число
 				try {
 					double num = stod(token);
 					if (!isnan(num))
@@ -270,9 +320,7 @@ public:
 					}
 				}
 				catch (exception e) {}
-
-
-				////cout << "New var " << endl;
+				//cout << "New var " << endl;
 			}
 			else {
 				// Вывод информации для отладки
@@ -285,9 +333,9 @@ public:
 				}
 				else if (type == LexemeType::Operator) {
 					// Если это оператор, обрабатываем приоритеты и ассоциативность
-					auto* op = dynamic_cast<Operator*>(lex.get());
-					while (!opStack.empty() && opStack.get_top()->getType() == LexemeType::Operator) {
-						auto* topOp = dynamic_cast<Operator*>(opStack.get_top());
+					auto op = dynamic_pointer_cast<Operator>(lex);
+					while (!opStack.empty() && opStack.top()->getType() == LexemeType::Operator) {
+						auto topOp = dynamic_pointer_cast<Operator>(opStack.top());
 
 						// Проверка на приоритет и ассоциативность
 						bool shouldPop;
@@ -299,50 +347,50 @@ public:
 						}
 
 						if (shouldPop) {
-							postfix.push_back(shared_ptr<Lexeme>(opStack.get_top()));
+							postfix.push_back(opStack.top());
 							opStack.pop();
 						}
 						else {
 							break;
 						}
 					}
-					opStack.push(lex.get()); // Добавляем текущий оператор в стек
+					opStack.push(lex); // Добавляем текущий оператор в стек
 				}
 				else if (type == LexemeType::ParOpen) {
 					// Если открывающая скобка, добавляем её в стек операторов
-					opStack.push(lex.get());
+					opStack.push(lex);
 				}
 				else if (type == LexemeType::ParClose) {
 					// Если закрывающая скобка, выталкиваем операторы в постфикс до открывающей скобки
-					while (!opStack.empty() && opStack.get_top()->getType() != LexemeType::ParOpen) {
-						postfix.push_back(shared_ptr<Lexeme>(opStack.get_top()));
+					while (!opStack.empty() && opStack.top()->getType() != LexemeType::ParOpen) {
+						postfix.push_back(opStack.top());
 						opStack.pop();
 					}
-					if (!opStack.empty() && opStack.get_top()->getType() == LexemeType::ParOpen) {
+					if (!opStack.empty() && opStack.top()->getType() == LexemeType::ParOpen) {
 						opStack.pop(); // Убираем открывающую скобку из стека
 					}
 				}
 			}
 
-
-			//cout << "It was token " << t << endl;
+			//cout << "It was token " << token << endl;
 			//cout << "Stack size: " << opStack.get_size() << endl;
 			//cout << "Postfix size: " << postfix.size() << endl;
 		}
 
 		// Перемещаем оставшиеся операторы в постфикс
 		while (!opStack.empty()) {
-			if (opStack.get_top()->getType() == LexemeType::ParOpen) {
+			if (opStack.top()->getType() == LexemeType::ParOpen) {
 				opStack.pop(); // Удаляем открывающую скобку, если она осталась
 			}
 			else {
-				postfix.push_back(shared_ptr<Lexeme>(opStack.get_top()));
-				//cout << "END Popping " << opStack.get_top()->getName() << " stack size " << endl;
+				postfix.push_back(opStack.top());
+				//cout << "END Popping " << opStack.top()->getName() << " stack size " << endl;
 				opStack.pop();
 			}
 		}
-		cout << "PARSING END\n";
+		//cout << "PARSING END\n";
 	}
+
 
 
 
@@ -426,7 +474,10 @@ public:
 
 	shared_ptr<Operand> Calculate()
 	{
+#ifdef CALCPRINT
+		int cc = 0;
 		cout << "CALCULATING\n";
+#endif
 		/*if (checkForUndefinedVars())
 			throw logic_error("Calculating when some variables are not defined");*/
 		if (!postfix.size())
@@ -434,13 +485,17 @@ public:
 
 		
 
-		TStack<shared_ptr<Operand>> calcStack;
+		stack<shared_ptr<Operand>> calcStack;
 
 		for (auto lexeme : postfix) {
-			cout << (int)lexeme->getType() << "_";
+#ifdef CALCPRINT
+			printLex(lexeme);
+			cout << "\t"; cc++;
+#endif
 			if (lexeme->getType() == LexemeType::Operand) {
 				// Если лексема — переменная, добавляем её значение в стек
 				calcStack.push(dynamic_pointer_cast<Operand>(lexeme));
+				//cout << "|";printLex(calcStack.top());cout << "|";
 			}
 			else if (lexeme->getType() == LexemeType::Operator) {
 				auto op = dynamic_pointer_cast<Operator>(lexeme);
@@ -448,13 +503,26 @@ public:
 
 				if (argCount == 1) {
 					// Для унарного оператора извлекаем один операнд
-					auto operand = calcStack.get_top(); calcStack.pop();
+					auto operand = calcStack.top(); calcStack.pop();
 					calcStack.push(op->Execute(operand));
 				}
 				else if (argCount == 2) {
 					// Для бинарного оператора извлекаем два операнда
-					auto op2 = calcStack.get_top(); calcStack.pop();
-					auto op1 = calcStack.get_top(); calcStack.pop();
+					auto op2 = calcStack.top(); calcStack.pop();
+					auto op1 = calcStack.top(); calcStack.pop();
+
+#ifdef CALCPRINT
+
+
+
+					cout << endl;
+					cc -= 2;
+					for (int k = 0;k < cc - 1;k++) { cout << "\t"; }
+					cout << "<";
+					printLex(op);printLex(op1);printLex(op2);
+					cout << ">\t";
+
+#endif // CALCPRINT
 
 					// Выполняем операцию и помещаем результат в стек
 					calcStack.push(op->Execute(op1, op2));
@@ -464,8 +532,8 @@ public:
 				}
 			}
 		}
-		result = calcStack.get_top();
-		cout << "CALC END\n";
+		result = calcStack.top();
+		//cout << "\nCALC END\n";
 		return result;
 	}
 
@@ -479,12 +547,12 @@ public:
 
 	~Postfix()
 	{
-		cout << "POSTFIX DELETING\n";
+		//cout << "POSTFIX DELETING\n";
 
 	//	for (auto& ptr : postfix) {
 	//		ptr.reset();
 	//	}
 	//	postfix.clear();
-	//}
+	}
 };
 

@@ -6,16 +6,28 @@
 //    ASSERT_NO_THROW(Postfix p(););
 //}
 //
-TEST(PostfixTest, can_parse_num_infix_expression)
+TEST(PostfixTest, can_calculate_num_infix_expression)
 {
     Postfix p;
-    p.inputInfix("1 + 2");
+    p.inputInfix("3 * 2");
     p.parseToPostfix();
     p.Calculate();
     double res;
     res = p.getNumberResult();
     cout << "RESULT = " << res << endl;;
-    ASSERT_EQ(res, 3);
+    ASSERT_EQ(res, 6);
+}
+
+TEST(PostfixTest, can_calculate_num_and_parentness_infix_expression)
+{
+    Postfix p;
+    p.inputInfix("2 * ( 4 - 1 )");
+    p.parseToPostfix();
+    p.Calculate();
+    double res;
+    res = p.getNumberResult();
+    cout << "RESULT = " << res << endl;;
+    ASSERT_EQ(res, 6);
 }
 //
 //TEST(PostfixTest, returns_correct_postfix_expression)
