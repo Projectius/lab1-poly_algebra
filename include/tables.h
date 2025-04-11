@@ -1,68 +1,79 @@
 #pragma once
-#include"polynom.h"
-#include<string>
+#include "polynom.h"
+#include <string>
 
 using namespace std;
 
-// Реализовать таблицы и тесты к ним
-// Таблицы хранят УКАЗАТЕЛИ НА ПОЛИНОМЫ
-// find возвращает nullptr если не нашёл
+extern const char* const TABLE_NAMES[];
+extern const int TABLE_COUNT;
 
-class Table
-{
-protected:
+// Абстрактная базовая таблица
+class Table {
 public:
-	Table(Polynom* data, size_t size);
-	virtual Polynom* find(const string& name);
-	virtual void add(const string& name, const Polynom* pol);
-	virtual void remove(const string& name);
+    Table(Polynom* data = nullptr, size_t size = 0);
+    virtual ~Table() = default;
+
+    virtual Polynom* find(const string& name) = 0;
+    virtual void add(const string& name, const Polynom* pol) = 0;
+    virtual void remove(const string& name) = 0;
 };
 
-class LinearArrayTable : public Table
-{
+// Таблица на основе линейного массива
+class LinearArrayTable : public Table {
 public:
-	Polynom* find(const string& name) override;
-	virtual void add(const string& name, const Polynom* pol);
-	void remove(const string& name) override;
+    LinearArrayTable();
+    virtual ~LinearArrayTable();
+    Polynom* find(const string& name) override;
+    void add(const string& name, const Polynom* pol) override;
+    void remove(const string& name) override;
 };
 
-class LinearListTable : public Table
-{
+// Таблица на основе связного списка
+class LinearListTable : public Table {
 public:
-	Polynom* find(const string& name) override;
-	virtual void add(const string& name, const Polynom* pol);
-	void remove(const string& name) override;
+    LinearListTable();
+    virtual ~LinearListTable();
+    Polynom* find(const string& name) override;
+    void add(const string& name, const Polynom* pol) override;
+    void remove(const string& name) override;
 };
 
-class OrderedArrayTable : public Table
-{
+// Упорядоченная таблица на основе массива
+class OrderedArrayTable : public Table {
 public:
-	Polynom* find(const string& name) override;
-	virtual void add(const string& name, const Polynom* pol);
-	void remove(const string& name) override;
+    OrderedArrayTable();
+    virtual ~OrderedArrayTable();
+    Polynom* find(const string& name) override;
+    void add(const string& name, const Polynom* pol) override;
+    void remove(const string& name) override;
 };
 
-class TreeTable : public Table
-{
+// Таблица на основе бинарного дерева поиска
+class TreeTable : public Table {
 public:
-	Polynom* find(const string& name) override;
-	virtual void add(const string& name, const Polynom* pol);
-	void remove(const string& name) override;
+    TreeTable();
+    virtual ~TreeTable();
+    Polynom* find(const string& name) override;
+    void add(const string& name, const Polynom* pol) override;
+    void remove(const string& name) override;
 };
 
-class OpenHashTable : public Table
-{
+// Хеш-таблица с открытой адресацией
+class OpenHashTable : public Table {
 public:
-	Polynom* find(const string& name) override;
-	virtual void add(const string& name, const Polynom* pol);
-	void remove(const string& name) override;
+    OpenHashTable();
+    virtual ~OpenHashTable();
+    Polynom* find(const string& name) override;
+    void add(const string& name, const Polynom* pol) override;
+    void remove(const string& name) override;
 };
 
-class ListHashTable : public Table
-{
+// Хеш-таблица с цепочками
+class ListHashTable : public Table {
 public:
-	Polynom* find(const string& name) override;
-	virtual void add(const string& name, const Polynom* pol);
-	void remove(const string& name) override;
+    ListHashTable();
+    virtual ~ListHashTable();
+    Polynom* find(const string& name) override;
+    void add(const string& name, const Polynom* pol) override;
+    void remove(const string& name) override;
 };
-
