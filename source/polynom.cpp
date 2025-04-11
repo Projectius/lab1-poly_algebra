@@ -1,4 +1,4 @@
-#include "polynom.h"
+п»ї#include "polynom.h"
 
 
 unsigned MAX_P = 1 + 9; // 1 + max degree
@@ -89,7 +89,7 @@ Polynom::Polynom() { head = new mNode(Monom(0, 0, 0, 0)); }
 
 void Polynom::copyFrom(const Polynom& other) {
     head = new mNode(other.head->m);
-    mNode* currentOther = other.head->next; // Начинаем с первого узла после head
+    mNode* currentOther = other.head->next; // РќР°С‡РёРЅР°РµРј СЃ РїРµСЂРІРѕРіРѕ СѓР·Р»Р° РїРѕСЃР»Рµ head
     mNode* currentThis = head;
 
     while (currentOther) {
@@ -127,7 +127,7 @@ Polynom::~Polynom() {
 Polynom& Polynom::operator=(const Polynom& other) {
     if (this == &other) return *this;
 
-    // Удаление
+    // РЈРґР°Р»РµРЅРёРµ
     mNode* current = head;
     while (current) {
         mNode* next = current->next;
@@ -142,7 +142,7 @@ Polynom& Polynom::operator=(const Polynom& other) {
 Polynom& Polynom::operator=(Polynom&& other) noexcept {
     if (this == &other) return *this;
 
-    // Удаление текущих узлов
+    // РЈРґР°Р»РµРЅРёРµ С‚РµРєСѓС‰РёС… СѓР·Р»РѕРІ
     mNode* current = head;
     while (current) {
         mNode* next = current->next;
@@ -150,9 +150,9 @@ Polynom& Polynom::operator=(Polynom&& other) noexcept {
         current = next;
     }
 
-    // Перехват ресурсов
+    // РџРµСЂРµС…РІР°С‚ СЂРµСЃСѓСЂСЃРѕРІ
     head = other.head;
-    other.head = nullptr; // Обнуляем указатель other
+    other.head = nullptr; // РћР±РЅСѓР»СЏРµРј СѓРєР°Р·Р°С‚РµР»СЊ other
 
     return *this;
 }

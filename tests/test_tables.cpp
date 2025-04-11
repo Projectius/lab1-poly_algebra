@@ -21,10 +21,10 @@ TEST(TableTest, linear_list_table_add)
     ADD_FAILURE() << "Test not implemented";
 }
 
-TEST(TableTest, linear_list_table_find)
-{
-    ADD_FAILURE() << "Test not implemented";
-}
+//TEST(TableTest, linear_list_table_find)
+//{
+//    ADD_FAILURE() << "Test not implemented";
+//}
 
 TEST(TableTest, linear_list_table_remove)
 {

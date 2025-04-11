@@ -1,6 +1,8 @@
 #pragma once
+#include "polynom.h"
 #include <vector>
 #include "tables.h"
+
 
 class TableManager
 {

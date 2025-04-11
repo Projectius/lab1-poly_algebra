@@ -25,6 +25,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Postfix_project", "Postfix_
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Tables_project", "Tables_project\Tables_project.vcxproj", "{22E806F0-FAE5-447D-BB61-ADFD62F7BE33}"
 	ProjectSection(ProjectDependencies) = postProject
+		{734D7B8F-D70A-4B83-9E7C-20CE5E375394} = {734D7B8F-D70A-4B83-9E7C-20CE5E375394}
 		{B91038C1-9748-4C17-874C-103632BAF8E3} = {B91038C1-9748-4C17-874C-103632BAF8E3}
 	EndProjectSection
 EndProject
