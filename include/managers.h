@@ -3,18 +3,8 @@
 //#include"TStack.h"
 #include<vector>
 #include"postfix.h"
+#include "tableman.h"
 
-class TableManager
-{
-	vector<Table*> tables;
-	int selected;
-public:
-	TableManager();
-	void selectTable(int tindex);
-	Polynom* find(const string name);
-	void add(const string name);
-	void remove(const string name);
-};
 
 class CommandManager
 {

@@ -12,7 +12,7 @@
 #include <iostream>
 #include <stdexcept>
 
-#include"managers.h"
+#include"tableman.h"
 #include"polynom.h"
 
 using namespace std;
@@ -81,17 +81,18 @@ public:
 	Number(double val) : Operand(true), value(val) {};
 	OperandType getType() const override { return OperandType::Number; }
 	double getValue() const { return value; }
-	void define(double val) { value = val; }
+	//void define(double val) { value = val; }
 };
 
 class PolynomialRef : public Operand {
 	Polynom* polyP;
 public:
+	PolynomialRef(Polynom* polynomPointer) : Operand(true), polyP(polynomPointer) {};
 	OperandType getType() const override { return OperandType::Polynom; }
 	Polynom& getPolynom() const {
 		return *polyP;
 	}
-	void define(Polynom* polynomPointer) { polyP = polynomPointer; }
+	//void define(Polynom* polynomPointer) { polyP = polynomPointer; }
 };
 
 //////////////////////////////////////////
@@ -195,7 +196,7 @@ class LexBase
 {
 	unordered_map<string, shared_ptr<Lexeme>> map;
 	//TableMANAGER!!!!
-	TableManager* vartable;
+	TableManager* tableman;
 
 public:
 	LexBase() = default;
@@ -221,14 +222,14 @@ public:
 
 	void addPoly(string name)
 	{
-		auto it = map.find(name);
-		if (it == map.end())
+		auto* it = tableman->find(name);
+		if (it != nullptr)
 		{
-
-			//not implemented
+			map.emplace(name, make_shared<PolynomialRef>(it));
+			
 			return;
 		}
-		throw "ADD existing lexeme";
+		throw "cant find Polynom";
 	}
 
 	void addOperator(string name, int argCount, int priority,OperatorType optorType, Associativity associativity = Associativity::Left) {
@@ -318,8 +319,14 @@ public:
 						postfix.push_back(make_shared<Number>(num));
 						//cout << "CAN NUM " << num << endl;
 					}
+					else
+					{
+						base.addPoly(token);
+					}
 				}
 				catch (exception e) {}
+
+
 				//cout << "New var " << endl;
 			}
 			else {
