@@ -130,12 +130,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\source\polynom.cpp" />
     <ClCompile Include="..\..\source\tableman.cpp" />
     <ClCompile Include="..\..\source\tables.cpp" />
     <ClCompile Include="..\..\tests\test_main.cpp" />
     <ClCompile Include="..\..\tests\test_tables.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\include\polynom.h" />
     <ClInclude Include="..\..\include\tableman.h" />
     <ClInclude Include="..\..\include\tables.h" />
   </ItemGroup>
