@@ -29,7 +29,7 @@ Polynom* TableManager::find(const string name)
 	return t->find(name);
 }
 
-void TableManager::add(const string name, const Polynom pol)
+void TableManager::add(const string name, const Polynom& pol)
 {
 	data.push_back(pol);
 	Polynom* np = &(data[data.size() - 1]);

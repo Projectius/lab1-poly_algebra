@@ -13,7 +13,7 @@ public:
 	TableManager();
 	bool selectTable(int tindex);
 	Polynom* find(const string name);
-	void add(const string name, const Polynom pol);
+	void add(const string name, const Polynom& pol);
 	void remove(const string name);
 	~TableManager();
 };

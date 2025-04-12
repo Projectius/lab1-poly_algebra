@@ -134,6 +134,7 @@
     <ClCompile Include="..\..\source\tableman.cpp" />
     <ClCompile Include="..\..\source\tables.cpp" />
     <ClCompile Include="..\..\tests\test_main.cpp" />
+    <ClCompile Include="..\..\tests\test_tableman.cpp" />
     <ClCompile Include="..\..\tests\test_tables.cpp" />
   </ItemGroup>
   <ItemGroup>
