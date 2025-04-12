@@ -18,10 +18,6 @@
 using namespace std;
 
 
-// Как сделать переменные-полиномы: хранить как значения переменных в мапе указатели на полиномы? (или лучше значения для удобства?) 
-// и при добавлении переменных в базу искать через методы tablemanager полином в таблицах чтобы присвоить его
-// Ещё и выполнять действия с миксом полином/число придётся как-то...
-
 enum class LexemeType { Undef, Operand, Operator , ParOpen, ParClose };
 
 class Lexeme
@@ -121,34 +117,60 @@ public:
 	OperatorType getOperatorType() { return func; }
 	Associativity getAssociativity() const { return associativity; }
 
-	//Number* ExecNum(Number* op1, Number* op2)
-	//{
-
-	//}
+	//		add sub	mul	div
+	//N+N	1	1	1	1
+	//P+P	1	1	0	0
+	//N+P	1	1	1	0
+	//P+N	1	1	1	1
 
 	shared_ptr<Operand> Execute(shared_ptr<Operand> a, shared_ptr<Operand> b = 0) const {
 		//cout << "EXEC ";printLex(a.get());printLex(b.get());
 		if (a == 0)
 			throw runtime_error("No arguments");
-		auto numA = dynamic_pointer_cast<Number>(a);
+		
 		if(argCount == 2)
 		{
+			
 			if (b == 0)
 				throw runtime_error("Not enough arguments");
+			auto numA = dynamic_pointer_cast<Number>(a);
 			auto numB = dynamic_pointer_cast<Number>(b);
+			auto polA = dynamic_pointer_cast<PolynomialRef>(a);
+			auto polB = dynamic_pointer_cast<PolynomialRef>(b);
 
-			if (func == OperatorType::Add)
+			if(numA && numB)
 			{
-				return make_shared<Number>(numA->getValue() + numB->getValue());
+				switch (func)
+				{
+				case OperatorType::Add:
+					return make_shared<Number>(numA->getValue() + numB->getValue());
+				case OperatorType::Sub:
+					return make_shared<Number>(numA->getValue() - numB->getValue());
+				case OperatorType::Mul:
+					return make_shared<Number>(numA->getValue() * numB->getValue());
+				case OperatorType::Div:
+					return make_shared<Number>(numA->getValue() / numB->getValue());
+				default:
+					throw runtime_error("Unsupported operation for <Num, Num>");
+				}
 			}
-			if (func == OperatorType::Sub)
+			else if ((polA || polB) && (numA || numB))
 			{
-				return make_shared<Number>(numA->getValue() - numB->getValue());
+				switch (func)
+				{
+				case OperatorType::Add:
+					return make_shared<Number>(numA->getValue() + numB->getValue());
+				case OperatorType::Sub:
+					return make_shared<Number>(numA->getValue() - numB->getValue());
+				case OperatorType::Mul:
+					return make_shared<Number>(numA->getValue() * numB->getValue());
+				case OperatorType::Div:
+					return make_shared<Number>(numA->getValue() / numB->getValue());
+				default:
+					throw runtime_error("Unsupported operation for <Num, Num>");
+				}
 			}
-			if (func == OperatorType::Mul)
-			{
-				return make_shared<Number>(numA->getValue() * numB->getValue());
-			}
+
 		}
 
 		

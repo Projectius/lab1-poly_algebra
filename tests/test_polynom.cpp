@@ -13,7 +13,18 @@ TEST(PolynomTest, can_create_polynom)
 
 TEST(PolynomTest, can_create_polynom_from_correct_string)
 {
-    ADD_FAILURE() << "Test not implemented";
+    Monom m(42, 1, 2, 3);
+    Monom n(55, 0, 0, 0);
+    Monom b(-33, 4, 0, 3);
+    Polynom p;
+    //cout << p<<endl;
+    p.insert(m);
+    p.insert(n);
+    p.insert(b);
+
+    Polynom p2 = parsePoly("55 + 42xy2z3 - 33x4z3");
+
+    ASSERT_EQ(p, p2);
 }
 
 TEST(PolynomTest, can_fill_polynom)

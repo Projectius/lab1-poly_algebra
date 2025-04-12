@@ -138,7 +138,6 @@
     <ClCompile Include="..\..\tests\test_tables.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\include\polynom.h" />
     <ClInclude Include="..\..\include\tableman.h" />
     <ClInclude Include="..\..\include\tables.h" />
   </ItemGroup>

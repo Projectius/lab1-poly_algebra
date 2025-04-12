@@ -1,6 +1,8 @@
 ﻿#pragma once
 
 #include<iostream>
+#include <string>
+#include <sstream>
 
 using namespace std;
 
@@ -8,17 +10,28 @@ extern unsigned MAX_P;
 
 class Monom {
     unsigned degs = 0;
-    int c = 0;
+    double c = 0;
 public:
     unsigned encode(unsigned x, unsigned y, unsigned z);
-    unsigned degOf(unsigned var_ind);
-    Monom(int coef = 0, unsigned x = 0, unsigned y = 0, unsigned z = 0);
-    int coef();
+    unsigned const degOf(unsigned var_ind) const;
+    Monom(double coef = 0, unsigned x = 0, unsigned y = 0, unsigned z = 0);
+    Monom(double coef, Monom& mon);
+    double coef() const;
 
     friend class Polynom;
-    friend ostream& operator<<(ostream&, Monom&);
-    friend Polynom operator+(Polynom&, Polynom&);
-    friend Monom operator*(Monom&, int);
+    friend ostream& operator<<(ostream&, const Monom&);
+
+    template <typename Op>
+    friend Polynom combinePolynoms(const Polynom& p1, const Polynom& p2, Op op);
+
+    friend Polynom operator+(const Polynom&, const Polynom&);
+    friend Polynom operator+(const Polynom& p, double n);
+    friend Polynom operator-(const Polynom& p, double n);
+    friend Polynom operator*(const Polynom& p, double k);
+
+    friend Monom operator*(const Monom&, double);
+
+    friend bool operator==(const Monom& m1, const Monom& m2);
 };
 
 struct mNode {
@@ -26,6 +39,9 @@ struct mNode {
     mNode* next = nullptr;
     mNode(const Monom m);
 };
+
+
+// POLYNOM
 
 class Polynom {
     mNode* head = nullptr;
@@ -45,16 +61,34 @@ public:
 
     Polynom& operator=(Polynom&& other) noexcept;
 
-    friend ostream& operator<<(ostream&, Polynom&);
-    friend Polynom operator+(Polynom&, Polynom&);
-    friend Polynom operator*(Polynom& p1, int k);
-    friend Polynom operator-(Polynom&, Polynom&);
+    friend ostream& operator<<(ostream&, const Polynom&);
+
+    template <typename Op>
+    friend Polynom combinePolynoms(const Polynom& p1, const Polynom& p2, Op op);
+    
+    friend Polynom operator+(const Polynom&, const Polynom&);
+    friend Polynom operator+(const Polynom& p, double n);
+    friend Polynom operator-(const Polynom&, const Polynom&);
+    friend Polynom operator-(const Polynom& p, double n);
+    friend Polynom operator*(const Polynom& p1, double k);
+    friend Polynom operator*(double k, const Polynom& p);
+
+    friend bool operator==(const Polynom& p1, const Polynom& p2); 
 };
 
 // Объявления перегрузок операторов
-Monom operator*(Monom& mon, int k);
-ostream& operator<<(ostream& out, Monom& m);
-Polynom operator+(Polynom& p1, Polynom& p2);
-Polynom operator*(Polynom& p1, int k);
-Polynom operator-(Polynom& p1, Polynom& p2);
-ostream& operator<<(ostream& os, Polynom& n);
+Monom operator*(Monom& mon, double k);
+ostream& operator<<(ostream& out, const Monom& m);
+Polynom operator+(const Polynom& p1, const Polynom& p2);
+Polynom operator+(const Polynom& p, double n);
+Polynom operator-(const Polynom& p1, const Polynom& p2);
+Polynom operator-(const Polynom& p, double n);
+Polynom operator*(const Polynom& p1, double k);
+Polynom operator*(double k, const Polynom& p);
+
+ostream& operator<<(ostream& os, const Polynom& n);
+
+bool operator==(const Monom& m1, const Monom& m2);
+bool operator==(const Polynom& p1, const Polynom& p2);
+
+Polynom parsePoly(const string& input);
