@@ -1,92 +1,177 @@
 #include "gtest.h"
-#include "../include/tables.h"
+#include "tables.h"
 
+// ------------------- LinearArrayTable -------------------
 TEST(TableTest, linear_array_table_add)
 {
-    ADD_FAILURE() << "Test not implemented";
+    LinearArrayTable table;
+    Polynom pol1, pol2;
+    table.add("key1", &pol1);
+    ASSERT_EQ(table.find("key1"), &pol1);
+    // Обновление значения
+    table.add("key1", &pol2);
+    ASSERT_EQ(table.find("key1"), &pol2);
 }
 
 TEST(TableTest, linear_array_table_find)
 {
-    ADD_FAILURE() << "Test not implemented";
+    LinearArrayTable table;
+    Polynom pol;
+    ASSERT_EQ(table.find("nonexistent"), nullptr);
+    table.add("key", &pol);
+    ASSERT_EQ(table.find("key"), &pol);
 }
 
 TEST(TableTest, linear_array_table_remove)
 {
-    ADD_FAILURE() << "Test not implemented";
+    LinearArrayTable table;
+    Polynom pol1, pol2;
+    table.add("key1", &pol1);
+    table.add("key2", &pol2);
+    table.remove("key1");
+    ASSERT_EQ(table.find("key1"), nullptr);
+    ASSERT_EQ(table.find("key2"), &pol2);
 }
 
+// ------------------- LinearListTable -------------------
 TEST(TableTest, linear_list_table_add)
 {
-    ADD_FAILURE() << "Test not implemented";
+    LinearListTable table;
+    Polynom pol1, pol2;
+    table.add("key1", &pol1);
+    ASSERT_EQ(table.find("key1"), &pol1);
+    table.add("key1", &pol2);
+    ASSERT_EQ(table.find("key1"), &pol2);
 }
 
-//TEST(TableTest, linear_list_table_find)
-//{
-//    ADD_FAILURE() << "Test not implemented";
-//}
+TEST(TableTest, linear_list_table_find)
+{
+    LinearListTable table;
+    Polynom pol;
+    ASSERT_EQ(table.find("key"), nullptr);
+    table.add("key", &pol);
+    ASSERT_EQ(table.find("key"), &pol);
+}
 
 TEST(TableTest, linear_list_table_remove)
 {
-    ADD_FAILURE() << "Test not implemented";
+    LinearListTable table;
+    Polynom pol1, pol2;
+    table.add("key1", &pol1);
+    table.add("key2", &pol2);
+    table.remove("key1");
+    ASSERT_EQ(table.find("key1"), nullptr);
+    ASSERT_EQ(table.find("key2"), &pol2);
 }
 
+// ------------------- OrderedArrayTable -------------------
 TEST(TableTest, ordered_array_table_add)
 {
-    ADD_FAILURE() << "Test not implemented";
+    OrderedArrayTable table;
+    Polynom pol1, pol2, pol3;
+    table.add("key3", &pol3);
+    table.add("key1", &pol1);
+    table.add("key2", &pol2);
+    ASSERT_EQ(table.find("key1"), &pol1);
+    ASSERT_EQ(table.find("key2"), &pol2);
+    ASSERT_EQ(table.find("key3"), &pol3);
 }
 
 TEST(TableTest, ordered_array_table_find)
 {
-    ADD_FAILURE() << "Test not implemented";
+    OrderedArrayTable table;
+    Polynom pol;
+    ASSERT_EQ(table.find("key"), nullptr);
+    table.add("key", &pol);
+    ASSERT_EQ(table.find("key"), &pol);
 }
 
 TEST(TableTest, ordered_array_table_remove)
 {
-    ADD_FAILURE() << "Test not implemented";
+    OrderedArrayTable table;
+    Polynom pol1, pol2;
+    table.add("key1", &pol1);
+    table.add("key2", &pol2);
+    table.remove("key1");
+    ASSERT_EQ(table.find("key1"), nullptr);
+    ASSERT_EQ(table.find("key2"), &pol2);
 }
 
+// ------------------- TreeTable -------------------
 TEST(TableTest, tree_table_add)
 {
-    ADD_FAILURE() << "Test not implemented";
+    TreeTable table;
+    Polynom pol1, pol2;
+    table.add("key1", &pol1);
+    table.add("key2", &pol2);
+    ASSERT_EQ(table.find("key1"), &pol1);
+    ASSERT_EQ(table.find("key2"), &pol2);
 }
 
 TEST(TableTest, tree_table_find)
 {
-    ADD_FAILURE() << "Test not implemented";
+    TreeTable table;
+    Polynom pol;
+    ASSERT_EQ(table.find("key"), nullptr);
+    table.add("key", &pol);
+    ASSERT_EQ(table.find("key"), &pol);
 }
 
 TEST(TableTest, tree_table_remove)
 {
-    ADD_FAILURE() << "Test not implemented";
+    TreeTable table;
+    Polynom pol1, pol2;
+    table.add("key1", &pol1);
+    table.add("key2", &pol2);
+    table.remove("key1");
+    ASSERT_EQ(table.find("key1"), nullptr);
+    ASSERT_EQ(table.find("key2"), &pol2);
 }
 
+// ------------------- OpenHashTable -------------------
 TEST(TableTest, open_hash_table_add)
 {
-    ADD_FAILURE() << "Test not implemented";
+    OpenHashTable table;
+    Polynom pol;
+    table.add("key", &pol);
+    ASSERT_EQ(table.find("key"), &pol);
 }
 
 TEST(TableTest, open_hash_table_find)
 {
-    ADD_FAILURE() << "Test not implemented";
+    OpenHashTable table;
+    ASSERT_EQ(table.find("nonexistent"), nullptr);
 }
 
 TEST(TableTest, open_hash_table_remove)
 {
-    ADD_FAILURE() << "Test not implemented";
+    OpenHashTable table;
+    Polynom pol;
+    table.add("key", &pol);
+    table.remove("key");
+    ASSERT_EQ(table.find("key"), nullptr);
 }
 
+// ------------------- ListHashTable -------------------
 TEST(TableTest, list_hash_table_add)
 {
-    ADD_FAILURE() << "Test not implemented";
+    ListHashTable table;
+    Polynom pol;
+    table.add("key", &pol);
+    ASSERT_EQ(table.find("key"), &pol);
 }
 
 TEST(TableTest, list_hash_table_find)
 {
-    ADD_FAILURE() << "Test not implemented";
+    ListHashTable table;
+    ASSERT_EQ(table.find("nonexistent"), nullptr);
 }
 
 TEST(TableTest, list_hash_table_remove)
 {
-    ADD_FAILURE() << "Test not implemented";
+    ListHashTable table;
+    Polynom pol;
+    table.add("key", &pol);
+    table.remove("key");
+    ASSERT_EQ(table.find("key"), nullptr);
 }
