@@ -31,8 +31,9 @@ Polynom* TableManager::find(const string name)
 
 void TableManager::add(const string name, const Polynom& pol)
 {
+	names.push_back(name);
 	data.push_back(pol);
-	Polynom* np = &(data[data.size() - 1]);
+	Polynom* np = &data.back();
 
 	for (auto& tb : tables)
 		tb->add(name,np);
@@ -50,4 +51,9 @@ TableManager::~TableManager()
 		delete tb;
 }
 
+void TableManager::PrintContent()
+{ 
+	for (auto& it : data)
+		cout << "[ " << it << endl;
+}
 

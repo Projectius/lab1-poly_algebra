@@ -52,6 +52,8 @@ public:
 
     ~Polynom();
     Polynom();
+
+    Polynom(double n);
     
     Polynom(const Polynom& y);
 
@@ -81,8 +83,10 @@ Monom operator*(Monom& mon, double k);
 ostream& operator<<(ostream& out, const Monom& m);
 Polynom operator+(const Polynom& p1, const Polynom& p2);
 Polynom operator+(const Polynom& p, double n);
+Polynom operator+(double n, const Polynom& p);
 Polynom operator-(const Polynom& p1, const Polynom& p2);
 Polynom operator-(const Polynom& p, double n);
+Polynom operator-(double n, const Polynom& p);
 Polynom operator*(const Polynom& p1, double k);
 Polynom operator*(double k, const Polynom& p);
 

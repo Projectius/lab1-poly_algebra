@@ -29,6 +29,24 @@ TEST(PostfixTest, can_calculate_num_and_parentness_infix_expression)
     cout << "RESULT = " << res << endl;;
     ASSERT_EQ(res, 6);
 }
+
+TEST(PostfixTest, can_calculate_polynom_expression)
+{
+    Postfix p;
+    p.addPolynom("p1", "1 + x2 + y3z2");
+    p.addPolynom("p2", "x2 - 4y3z2 + y6");
+    p.inputInfix("p1 + p2");
+
+    p.tableman.selectTable(0);
+
+    p.parseToPostfix();
+    p.Calculate();
+    Polynom res;
+    res = p.getPolynomResult();
+    cout << "RESULT = " << res << endl;;
+    ASSERT_EQ(res, parsePoly("1 + 2x2 - 3y3z2 + y6"));
+}
+
 //
 //TEST(PostfixTest, returns_correct_postfix_expression)
 //{

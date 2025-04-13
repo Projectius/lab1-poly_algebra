@@ -80,15 +80,15 @@ public:
 	//void define(double val) { value = val; }
 };
 
-class PolynomialRef : public Operand {
-	Polynom* polyP;
+class PolyLex : public Operand {
+	Polynom poly;
 public:
-	PolynomialRef(Polynom* polynomPointer) : Operand(true), polyP(polynomPointer) {};
+	PolyLex(Polynom polynom) : Operand(true), poly(polynom) {};
+	PolyLex(PolyLex&& r) : Operand(true), poly(r.poly) {};
 	OperandType getType() const override { return OperandType::Polynom; }
-	Polynom& getPolynom() const {
-		return *polyP;
+	Polynom getPolynom() const {
+		return poly;
 	}
-	//void define(Polynom* polynomPointer) { polyP = polynomPointer; }
 };
 
 //////////////////////////////////////////
@@ -135,8 +135,8 @@ public:
 				throw runtime_error("Not enough arguments");
 			auto numA = dynamic_pointer_cast<Number>(a);
 			auto numB = dynamic_pointer_cast<Number>(b);
-			auto polA = dynamic_pointer_cast<PolynomialRef>(a);
-			auto polB = dynamic_pointer_cast<PolynomialRef>(b);
+			auto polA = dynamic_pointer_cast<PolyLex>(a);
+			auto polB = dynamic_pointer_cast<PolyLex>(b);
 
 			if(numA && numB)
 			{
@@ -154,23 +154,48 @@ public:
 					throw runtime_error("Unsupported operation for <Num, Num>");
 				}
 			}
-			else if ((polA || polB) && (numA || numB))
+			if (polA&&polB)
 			{
 				switch (func)
 				{
 				case OperatorType::Add:
-					return make_shared<Number>(numA->getValue() + numB->getValue());
+					return make_shared<PolyLex>(polA->getPolynom() + polB->getPolynom());
 				case OperatorType::Sub:
-					return make_shared<Number>(numA->getValue() - numB->getValue());
-				case OperatorType::Mul:
-					return make_shared<Number>(numA->getValue() * numB->getValue());
-				case OperatorType::Div:
-					return make_shared<Number>(numA->getValue() / numB->getValue());
+					return make_shared<PolyLex>(polA->getPolynom() - polB->getPolynom());
 				default:
-					throw runtime_error("Unsupported operation for <Num, Num>");
+					throw runtime_error("Unsupported operation for <Poly, Poly>");
 				}
 			}
-
+			if (numA && polB)
+			{
+				switch (func)
+				{
+				case OperatorType::Add:
+					return make_shared<PolyLex>(numA->getValue() + polB->getPolynom());
+				case OperatorType::Sub:
+					return make_shared<PolyLex>(numA->getValue() - polB->getPolynom());
+				case OperatorType::Mul:
+					return make_shared<PolyLex>(numA->getValue() * polB->getPolynom());
+				default:
+					throw runtime_error("Unsupported operation for <Poly, Poly>");
+				}
+			}
+			if (polA && numB)
+			{
+				switch (func)
+				{
+				case OperatorType::Add:
+					return make_shared<PolyLex>(polA->getPolynom() + numB->getValue());
+				case OperatorType::Sub:
+					return make_shared<PolyLex>(polA->getPolynom() - numB->getValue());
+				case OperatorType::Mul:
+					return make_shared<PolyLex>(polA->getPolynom() * numB->getValue());
+				case OperatorType::Div:
+					return make_shared<PolyLex>(polA->getPolynom()*( 1.0/ numB->getValue()));
+				default:
+					throw runtime_error("Unsupported operation for <Poly, Poly>");
+				}
+			}
 		}
 
 		
@@ -191,6 +216,13 @@ void printLex(shared_ptr<Lexeme> l)
 		auto od = dynamic_pointer_cast<Operand>(l);
 		if (auto nu = dynamic_pointer_cast<Number> (od))
 			cout << "{" << nu->getValue() << "}";
+		else if (auto po = dynamic_pointer_cast<PolyLex> (od))
+		{
+			cout << "{" << po->getPolynom() << "}";
+		} else
+		{
+			cout << "{" << "OPERAND?" << "}";
+		}
 	}
 	else if (lt == LexemeType::Operator)
 	{
@@ -221,7 +253,7 @@ class LexBase
 	TableManager* tableman;
 
 public:
-	LexBase() = default;
+	LexBase(TableManager* polyTableman) :tableman(polyTableman) {};
 
 	~LexBase() {
 		//for (auto& pair : map) {
@@ -242,14 +274,19 @@ public:
 		throw "ADD existing lexeme";
 	}
 
-	void addPoly(string name)
+	shared_ptr<PolyLex> addPoly(const string& name)
 	{
-		auto* it = tableman->find(name);
+		cout << "TABLEMAN CONTENT FROM BASE:" << endl;
+		tableman->PrintContent();
+		cout << "FROM BASE: "<<name << " = " << *(tableman->find(name)) << endl;
+		Polynom* it = tableman->find(name);
 		if (it != nullptr)
 		{
-			map.emplace(name, make_shared<PolynomialRef>(it));
+			cout << "ADD POLYNOM LEX TO BASE: " << *it << endl;
+			shared_ptr<PolyLex> newPoly = make_shared<PolyLex>(*it);
+			map.emplace(name, newPoly);
 			
-			return;
+			return newPoly;
 		}
 		throw "cant find Polynom";
 	}
@@ -259,7 +296,7 @@ public:
 		//cout << "ADDED OPERATOR: " << nOp->getName() << " with priority " << nOp->getPriority() << " and associativity " << (associativity == Associativity::Left ? "Left" : "Right") << endl;
 	}
 
-	shared_ptr<Lexeme> getLexeme(string name)
+	shared_ptr<Lexeme> getLexeme(const string& name)
 	{
 		auto it = map.find(name);
 		if (it != map.end())
@@ -287,15 +324,18 @@ public:
 
 class Postfix
 {
-	LexBase base;
+	
 	string infix;
 	vector<shared_ptr<Lexeme>> postfix;
 	stack<shared_ptr<Lexeme>> opStack;
 	shared_ptr<Operand> result;
+	
+	LexBase base;
 
 public:
+	TableManager tableman;
 
-	Postfix(bool importBasicOperators = true)
+	Postfix(bool importBasicOperators = true):base(&tableman)
 	{
 
 		if (importBasicOperators) {
@@ -309,6 +349,14 @@ public:
 		}
 	}
 
+	void addPolynom(const string& name, const string& polystr)
+	{
+		Polynom p = parsePoly(polystr);
+		cout << "ADDING TO TABLES: " << name << " = " << polystr << " = " <<p<< endl;
+		tableman.add(name, p);
+		cout << " = " << *tableman.find(name )<< endl;
+	}
+
 	void inputInfix(string infix_)
 	{
 		infix = infix_;
@@ -316,6 +364,8 @@ public:
 
 
 	void parseToPostfix() {
+		cout << "TABLEMAN CONTENT FROM POSTFIX PRE-PARSING:" << endl;
+		tableman.PrintContent();
 
 		if (infix.empty())
 			throw logic_error("Trying to parse empty infix");
@@ -328,25 +378,31 @@ public:
 			//cout << "Got token " << token << endl;
 
 			if (lex == nullptr) {
-				// Если лексема не найдена, добавляем как новую переменную
+				// Если лексема не найдена, добавляем как новый операнд
 
 				if (token.find_first_of("()") != string::npos)
 					throw runtime_error("Variable name or number fused with parentheses");
 
 				// Попытаемся сразу определить если это число
+				
+				double num = NAN;
 				try {
-					double num = stod(token);
-					if (!isnan(num))
-					{
-						postfix.push_back(make_shared<Number>(num));
-						//cout << "CAN NUM " << num << endl;
-					}
-					else
-					{
-						base.addPoly(token);
-					}
+					num = stod(token);
 				}
-				catch (exception e) {}
+				catch( exception e){}
+					
+				if (!isnan(num))
+				{
+					postfix.push_back(make_shared<Number>(num));
+					//cout << "CAN NUM " << num << endl;
+				}
+				else
+				{
+					cout << "FOUND POLY: " << token << endl;
+					postfix.push_back(base.addPoly(token));
+				}
+				
+				
 
 
 				//cout << "New var " << endl;
@@ -501,6 +557,7 @@ public:
 	//	return false;
 	//}
 
+#define CALCPRINT
 	shared_ptr<Operand> Calculate()
 	{
 #ifdef CALCPRINT
@@ -572,6 +629,20 @@ public:
 		if (!n)
 			throw runtime_error("Getting Polynom result as Number");
 		return n->getValue();
+	}
+
+	Polynom getPolynomResult()
+	{
+		auto p = dynamic_cast<PolyLex*>(result.get());
+		if(!p)
+		{
+			Number* n = dynamic_cast<Number*>(result.get());
+			if (!n)
+				throw runtime_error("Result is not Polynom or Number");
+			return n->getValue();
+		}
+		return p->getPolynom();
+		
 	}
 
 	~Postfix()

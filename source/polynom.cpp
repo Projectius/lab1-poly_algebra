@@ -90,6 +90,7 @@ void Polynom::insert(const Monom mon) {
 }
 
 Polynom::Polynom() { head = new mNode(Monom(0, 0, 0, 0)); }
+Polynom::Polynom(double n) { head = new mNode(Monom(n, 0, 0, 0)); }
 
 void Polynom::copyFrom(const Polynom& other) {
     head = new mNode(other.head->m);
@@ -275,6 +276,10 @@ Polynom operator*(double k, const Polynom& p ) {
 
 ostream& operator<<(ostream& os, const Polynom& n) {
     mNode* p = n.head;
+    if (!p) {
+        os << "INVALID_POLYNOM, HEAD = nullptr!\n";
+        return os;
+    }
     if ((!p->next) && (!p->m.coef())) {
         os << "0";
         return os;
