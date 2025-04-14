@@ -47,6 +47,40 @@ TEST(PostfixTest, can_calculate_polynom_expression)
     ASSERT_EQ(res, parsePoly("1 + 2x2 - 3y3z2 + y6"));
 }
 
+TEST(PostfixTest, can_calculate_simple_polynom_and_num_expression)
+{
+    Postfix p;
+    p.addPolynom("p1", "1 - x2 + 3y3z2");
+    //p.addPolynom("p2", "x2 - 4y3z2 + y6");
+    p.inputInfix("2 * p1");
+
+    p.tableman.selectTable(0);
+
+    p.parseToPostfix();
+    p.Calculate();
+    Polynom res;
+    res = p.getPolynomResult();
+    cout << "RESULT = " << res << endl;;
+    ASSERT_EQ(res, parsePoly("2 - 2x2 + 6y3z2"));
+}
+
+//TEST(PostfixTest, can_calculate_complex_polynom_and_num_expression)
+//{
+//    Postfix p;
+//    p.addPolynom("p1", "1 + x2 + y3z2");
+//    p.addPolynom("p2", "x2 - 4y3z2 + y6");
+//    p.inputInfix("1 + 2 * p1 + p2 / 3");
+//
+//    p.tableman.selectTable(0);
+//
+//    p.parseToPostfix();
+//    p.Calculate();
+//    Polynom res;
+//    res = p.getPolynomResult();
+//    cout << "RESULT = " << res << endl;;
+//    ASSERT_EQ(res, parsePoly("1 + 2x2 - 3y3z2 + y6"));
+//}
+
 //
 //TEST(PostfixTest, returns_correct_postfix_expression)
 //{

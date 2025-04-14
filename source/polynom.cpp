@@ -89,19 +89,21 @@ void Polynom::insert(const Monom mon) {
     n->next = pnext;
 }
 
-Polynom::Polynom() { head = new mNode(Monom(0, 0, 0, 0)); }
-Polynom::Polynom(double n) { head = new mNode(Monom(n, 0, 0, 0)); }
+Polynom::Polynom() { head = new mNode(Monom(0, 0, 0, 0)); back = head; }
+Polynom::Polynom(double n) { head = new mNode(Monom(n, 0, 0, 0)); back = head; }
 
 void Polynom::copyFrom(const Polynom& other) {
     head = new mNode(other.head->m);
+    
     mNode* currentOther = other.head->next; // Начинаем с первого узла после head
     mNode* currentThis = head;
 
     while (currentOther) {
-        currentThis->next = new mNode(currentOther->m);
+        back = currentThis->next = new mNode(currentOther->m);
         currentThis = currentThis->next;
         currentOther = currentOther->next;
     }
+
 }
 
 Polynom::Polynom(const Polynom& y) {
@@ -157,8 +159,9 @@ Polynom& Polynom::operator=(Polynom&& other) noexcept {
 
     // Перехват ресурсов
     head = other.head;
+    back = other.back;
     other.head = nullptr; // Обнуляем указатель other
-
+    other.back = nullptr;
     return *this;
 }
 
@@ -214,6 +217,8 @@ Polynom combinePolynoms(const Polynom& p1, const Polynom& p2, Op op) {
             p2Node = p2Node->next;
         }
     }
+    /*if (result.back->m.degs != 0)
+        throw("Polynom BACK invalid\n");*/
     return result;
 }
 
@@ -224,7 +229,10 @@ Polynom operator+(const Polynom& p1, const Polynom& p2) {
 Polynom operator+(const Polynom& p, double n)
 {
     Polynom result(p);
-    result.head->m.c += n;
+    cout << endl << result.back->m << "   " << n << endl;
+    result.back->m.c += n;
+    cout << endl<<result.back->m << "   " << n << endl;
+    cout << "+++++++++++++++ " << result << endl;
     return result;
 }
 
@@ -240,7 +248,7 @@ Polynom operator-(const Polynom& p1, const Polynom& p2) {
 Polynom operator-(const Polynom& p, double n)
 {
     Polynom result(p);
-    result.head->m.c -= n;
+    result.back->m.c -= n;
     return result;
 }
 
@@ -259,7 +267,7 @@ Polynom operator*(const Polynom& p, double k) {
     //return result;
 
     Polynom result(p);
-    mNode* h = p.head;
+    mNode* h = result.head;
     while (h)
     {
         h->m.c *= k;

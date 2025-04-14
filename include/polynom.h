@@ -45,6 +45,7 @@ struct mNode {
 
 class Polynom {
     mNode* head = nullptr;
+    mNode* back = nullptr;
 
     void copyFrom(const Polynom& other);
 public:

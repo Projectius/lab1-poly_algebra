@@ -94,6 +94,7 @@ public:
 //////////////////////////////////////////
 enum class Associativity { Left, Right };
 enum class OperatorType{Add, Sub, Mul, Div};
+const char OpSymbols[] = { '+','-','*','/' };
 
 class Operator : public Lexeme
 {
@@ -227,7 +228,7 @@ void printLex(shared_ptr<Lexeme> l)
 	else if (lt == LexemeType::Operator)
 	{
 		auto op = dynamic_pointer_cast<Operator>(l);
-		cout << "[OP" << static_cast<int>(op->getOperatorType()) << "]";
+		cout << "[" << OpSymbols [static_cast<int>(op->getOperatorType())] << "]";
 	}
 	else if (lt == LexemeType::ParOpen)
 	{
