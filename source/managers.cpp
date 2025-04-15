@@ -12,6 +12,7 @@ CommandManager::CommandManager():postfix(&tableman), state(Cmds::Menu)
 
 void CommandManager::LoopInputProcessing()
 {
+	cout << "Avaible commands: manu, polynoms, tables, selecttable, constants, constin, polyin, polycalc, del, expr, saveres" << endl;
 	string name;
 	shared_ptr<Operand> result;
 	while (true)
