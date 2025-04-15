@@ -229,10 +229,7 @@ Polynom operator+(const Polynom& p1, const Polynom& p2) {
 Polynom operator+(const Polynom& p, double n)
 {
     Polynom result(p);
-    cout << endl << result.back->m << "   " << n << endl;
     result.back->m.c += n;
-    cout << endl<<result.back->m << "   " << n << endl;
-    cout << "+++++++++++++++ " << result << endl;
     return result;
 }
 
@@ -368,7 +365,7 @@ Polynom parsePoly(const string& input) {
             if (ch == 'x') target = &x;
             else if (ch == 'y') target = &y;
             else if (ch == 'z') target = &z;
-            else throw "Unexpected variable in input";
+            else throw runtime_error("Unexpected variable in input: " + ch);
 
             if (isdigit(stream.peek())) {
                 while (isdigit(stream.peek())) {
@@ -396,11 +393,22 @@ Polynom parsePoly(const string& input) {
         //cout << stream.str() << endl;
 
         if (stream.peek() != '+' && stream.peek() != '-' && !stream.eof()) {
-            cout << "This char:" << char(stream.peek()) << ":" << endl;
-            throw "Unexpected character in input";
+            throw runtime_error("Unexpected character in input: " + char(stream.peek()));
         }
     }
 
     return result;
 }
 
+double CalcInPoint(Polynom& p, double x, double y, double z)
+{
+    double result = 0;
+    mNode* h = p.head;
+    while (h)
+    {
+        Monom& m = h->m;
+        result += m.c * pow(x, m.degOf(1)) * pow(y, m.degOf(2)) * pow(z, m.degOf(3));
+        h = h->next;
+    }
+    return result;
+}

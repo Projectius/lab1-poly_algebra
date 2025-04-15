@@ -1,6 +1,2 @@
-#include "managers.h"
+//#include "managers.h"
 
-int main()
-{
-	return 0;
-}

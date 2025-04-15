@@ -32,7 +32,10 @@ public:
     friend Monom operator*(const Monom&, double);
 
     friend bool operator==(const Monom& m1, const Monom& m2);
+
+    friend double CalcInPoint(Polynom& p, double x, double y, double z);
 };
+
 
 struct mNode {
     Monom m;
@@ -77,6 +80,8 @@ public:
     friend Polynom operator*(double k, const Polynom& p);
 
     friend bool operator==(const Polynom& p1, const Polynom& p2); 
+
+    friend double CalcInPoint(Polynom& p, double x, double y, double z);
 };
 
 // Объявления перегрузок операторов
@@ -97,3 +102,5 @@ bool operator==(const Monom& m1, const Monom& m2);
 bool operator==(const Polynom& p1, const Polynom& p2);
 
 Polynom parsePoly(const string& input);
+
+double CalcInPoint(Polynom& p, double x, double y, double z);

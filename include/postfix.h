@@ -40,8 +40,6 @@ public:
 	friend ostream& operator<<(ostream&, Lexeme&);
 };
 
-void printLex(Lexeme*);
-
 ostream& operator<<(ostream& out, Lexeme& lex)
 {
 	//cout << " <<" << lex.name << endl;
@@ -262,6 +260,16 @@ public:
 		//}
 	}
 
+	bool checkIsInBase(string& name)
+	{
+		return map.find(name) != map.end();
+	}
+
+	void deleteLex(string& name)
+	{
+		map.erase(name);
+	}
+
 	void addNum(string name, double value)
 	{
 		auto it = map.find(name);
@@ -272,24 +280,24 @@ public:
 			//cout << "ADDED VAR :" << nvar->getName() << ":" << endl;
 			return;
 		}
-		throw "ADD existing lexeme";
+		throw runtime_error("ADD existing lexeme");
 	}
 
 	shared_ptr<PolyLex> addPoly(const string& name)
 	{
-		cout << "TABLEMAN CONTENT FROM BASE:" << endl;
-		tableman->PrintContent();
-		cout << "FROM BASE: "<<name << " = " << *(tableman->find(name)) << endl;
+		
+
+		
 		Polynom* it = tableman->find(name);
 		if (it != nullptr)
 		{
-			cout << "ADD POLYNOM LEX TO BASE: " << *it << endl;
+			//cout << "ADD POLYNOM LEX TO BASE: " << *it << endl;
 			shared_ptr<PolyLex> newPoly = make_shared<PolyLex>(*it);
 			map.emplace(name, newPoly);
 			
 			return newPoly;
 		}
-		throw "cant find Polynom";
+		throw runtime_error("cant find Polynom");
 	}
 
 	void addOperator(string name, int argCount, int priority,OperatorType optorType, Associativity associativity = Associativity::Left) {
@@ -317,6 +325,16 @@ public:
 	//	}
 	//	return lexemes;
 	//}
+
+	void printConstants()
+	{
+		for (const auto& pair : map) {
+			if(pair.second->getType() == LexemeType::Operand)
+				if (Operand* opnd = static_cast<Operand*>(pair.second.get()))
+					if(opnd->getType() == OperandType::Number)
+						cout << pair.first << "\t" << static_cast<Number*>(opnd)->getValue()<<endl;
+			}
+	}
 };
 
 
@@ -331,14 +349,14 @@ class Postfix
 	stack<shared_ptr<Lexeme>> opStack;
 	shared_ptr<Operand> result;
 	
-	LexBase base;
+	
 
 public:
-	TableManager tableman;
+	TableManager* tableman = nullptr;
+	LexBase base;
 
-	Postfix(bool importBasicOperators = true):base(&tableman)
+	Postfix(TableManager* tablemanp = nullptr, bool importBasicOperators = true):tableman(tablemanp ? tablemanp : new TableManager), base(tableman)
 	{
-
 		if (importBasicOperators) {
 			base.addOperator("+", 2, 0, OperatorType::Add);
 			base.addOperator("-", 2, 0, OperatorType::Sub);
@@ -350,12 +368,20 @@ public:
 		}
 	}
 
+	void addOperator(string name, int argCount, int priority, OperatorType optorType, Associativity associativity = Associativity::Left) {
+		base.addOperator(name, argCount, priority, optorType, associativity);
+	}
+
 	void addPolynom(const string& name, const string& polystr)
 	{
 		Polynom p = parsePoly(polystr);
-		cout << "ADDING TO TABLES: " << name << " = " << polystr << " = " <<p<< endl;
-		tableman.add(name, p);
-		cout << " = " << *tableman.find(name )<< endl;
+		//cout << "ADDING TO TABLES: " << name << " = " << polystr << " = " <<p<< endl;
+		tableman->add(name, p);
+		//cout << " = " << *tableman.find(name )<< endl;
+	}
+	void addConstant(const string& name, double val)
+	{
+		base.addNum(name, val);
 	}
 
 	void inputInfix(string infix_)
@@ -365,8 +391,6 @@ public:
 
 
 	void parseToPostfix() {
-		cout << "TABLEMAN CONTENT FROM POSTFIX PRE-PARSING:" << endl;
-		tableman.PrintContent();
 
 		if (infix.empty())
 			throw logic_error("Trying to parse empty infix");
@@ -399,12 +423,9 @@ public:
 				}
 				else
 				{
-					cout << "FOUND POLY: " << token << endl;
+					//cout << "FOUND POLY: " << token << endl;
 					postfix.push_back(base.addPoly(token));
 				}
-				
-				
-
 
 				//cout << "New var " << endl;
 			}
@@ -477,9 +498,6 @@ public:
 		//cout << "PARSING END\n";
 	}
 
-
-
-
 	string getInfix() { return infix; }
 	string GetPostfix()
 	{
@@ -493,72 +511,8 @@ public:
 		return res;
 	}
 
-	void addOperator(string name, int argCount, int priority, OperatorType optorType, Associativity associativity = Associativity::Left) {
-		base.addOperator(name, argCount, priority, optorType, associativity);
-	}
-
-	//Функционал с неопределёнными переменными и доопределением пока не поддерживатеся
-	
-	//void setVariable(const string& name, T value) {
-	//	Lexeme* lex = base.getLexeme(name);
-	//	if (lex && lex->getType() == LexemeType::var) {
-	//		dynamic_cast<Variable<T>*>(lex)->define(value);
-	//	}
-	//	else {
-	//		//cout << "Variable not found: " << name << endl;
-	//		throw logic_error("Variable not found: " + name);
-	//	}
-	//}
-	//
-	//void setVariables(const vector<pair<string, T>>& vars) {
-	//	for (const auto& var : vars) {
-	//		setVariable(var.first, var.second);
-	//	}
-	//}
-	//
-	//vector<string> getUndefinedVars() {
-	//	vector<string> undefinedVars;
-	//	for (const auto& lexemePair : base.getAllLexemes()) {
-	//		Lexeme* lexeme = lexemePair.second;
-	//		if (lexeme->getType() == LexemeType::var) {
-	//			Variable<T>* var = static_cast<Variable<T>*>(lexeme);
-	//			if (!var->isDefined()) {
-	//				undefinedVars.push_back(var->getName());
-	//			}
-	//		}
-	//	}
-	//	return undefinedVars;
-	//}
-	//
-	//vector<string> getOperatorNames() {
-	//	vector<string > ops;
-	//	for (const auto& lexemePair : base.getAllLexemes()) {
-	//		Lexeme* lexeme = lexemePair.second;
-	//		if (lexeme->getType() == LexemeType::op) {
-	//
-	//			ops.push_back(lexeme->getName());
-	//
-	//		}
-	//	}
-	//	return ops;
-	//}
-	//
-	//bool checkForUndefinedVars()
-	//{
-	//	for (const auto& lexemePair : base.getAllLexemes()) {
-	//		Lexeme* lexeme = lexemePair.second;
-	//		if (lexeme->getType() == LexemeType::var) {
-	//			//Variable<T>* var = static_cast<Variable<T>*>(lexeme);
-	//			if (!lexeme->isDefined()) {
-	//				//cout << "ud "<< lexeme->getName() << endl;
-	//				return true;
-	//			}
-	//		}
-	//	}
-	//	return false;
-	//}
-
 #define CALCPRINT
+
 	shared_ptr<Operand> Calculate()
 	{
 #ifdef CALCPRINT
@@ -598,6 +552,9 @@ public:
 					auto op2 = calcStack.top(); calcStack.pop();
 					auto op1 = calcStack.top(); calcStack.pop();
 
+					// Выполняем операцию и помещаем результат в стек
+					calcStack.push(op->Execute(op1, op2));
+
 #ifdef CALCPRINT
 
 
@@ -607,12 +564,11 @@ public:
 					for (int k = 0;k < cc - 1;k++) { cout << "\t"; }
 					cout << "<";
 					printLex(op);printLex(op1);printLex(op2);
-					cout << ">\t";
+					cout << " = "; printLex(calcStack.top());cout<<"> \t";
 
 #endif // CALCPRINT
 
-					// Выполняем операцию и помещаем результат в стек
-					calcStack.push(op->Execute(op1, op2));
+					
 				}
 				else {
 					throw logic_error("Operator arguments count not supported");
@@ -655,5 +611,67 @@ public:
 	//	}
 	//	postfix.clear();
 	}
+
+	//Функционал с неопределёнными переменными и доопределением пока не поддерживатеся
+
+//void setVariable(const string& name, T value) {
+//	Lexeme* lex = base.getLexeme(name);
+//	if (lex && lex->getType() == LexemeType::var) {
+//		dynamic_cast<Variable<T>*>(lex)->define(value);
+//	}
+//	else {
+//		//cout << "Variable not found: " << name << endl;
+//		throw logic_error("Variable not found: " + name);
+//	}
+//}
+//
+//void setVariables(const vector<pair<string, T>>& vars) {
+//	for (const auto& var : vars) {
+//		setVariable(var.first, var.second);
+//	}
+//}
+//
+//vector<string> getUndefinedVars() {
+//	vector<string> undefinedVars;
+//	for (const auto& lexemePair : base.getAllLexemes()) {
+//		Lexeme* lexeme = lexemePair.second;
+//		if (lexeme->getType() == LexemeType::var) {
+//			Variable<T>* var = static_cast<Variable<T>*>(lexeme);
+//			if (!var->isDefined()) {
+//				undefinedVars.push_back(var->getName());
+//			}
+//		}
+//	}
+//	return undefinedVars;
+//}
+//
+//vector<string> getOperatorNames() {
+//	vector<string > ops;
+//	for (const auto& lexemePair : base.getAllLexemes()) {
+//		Lexeme* lexeme = lexemePair.second;
+//		if (lexeme->getType() == LexemeType::op) {
+//
+//			ops.push_back(lexeme->getName());
+//
+//		}
+//	}
+//	return ops;
+//}
+//
+//bool checkForUndefinedVars()
+//{
+//	for (const auto& lexemePair : base.getAllLexemes()) {
+//		Lexeme* lexeme = lexemePair.second;
+//		if (lexeme->getType() == LexemeType::var) {
+//			//Variable<T>* var = static_cast<Variable<T>*>(lexeme);
+//			if (!lexeme->isDefined()) {
+//				//cout << "ud "<< lexeme->getName() << endl;
+//				return true;
+//			}
+//		}
+//	}
+//	return false;
+//}
+
 };
 
