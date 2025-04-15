@@ -18,10 +18,6 @@
 using namespace std;
 
 
-// Как сделать переменные-полиномы: хранить как значения переменных в мапе указатели на полиномы? (или лучше значения для удобства?) 
-// и при добавлении переменных в базу искать через методы tablemanager полином в таблицах чтобы присвоить его
-// Ещё и выполнять действия с миксом полином/число придётся как-то...
-
 enum class LexemeType { Undef, Operand, Operator , ParOpen, ParClose };
 
 class Lexeme
@@ -43,8 +39,6 @@ public:
 	virtual ~Lexeme() {};
 	friend ostream& operator<<(ostream&, Lexeme&);
 };
-
-void printLex(Lexeme*);
 
 ostream& operator<<(ostream& out, Lexeme& lex)
 {
@@ -84,20 +78,21 @@ public:
 	//void define(double val) { value = val; }
 };
 
-class PolynomialRef : public Operand {
-	Polynom* polyP;
+class PolyLex : public Operand {
+	Polynom poly;
 public:
-	PolynomialRef(Polynom* polynomPointer) : Operand(true), polyP(polynomPointer) {};
+	PolyLex(Polynom polynom) : Operand(true), poly(polynom) {};
+	PolyLex(PolyLex&& r) : Operand(true), poly(r.poly) {};
 	OperandType getType() const override { return OperandType::Polynom; }
-	Polynom& getPolynom() const {
-		return *polyP;
+	Polynom getPolynom() const {
+		return poly;
 	}
-	//void define(Polynom* polynomPointer) { polyP = polynomPointer; }
 };
 
 //////////////////////////////////////////
 enum class Associativity { Left, Right };
 enum class OperatorType{Add, Sub, Mul, Div};
+const char OpSymbols[] = { '+','-','*','/' };
 
 class Operator : public Lexeme
 {
@@ -121,33 +116,84 @@ public:
 	OperatorType getOperatorType() { return func; }
 	Associativity getAssociativity() const { return associativity; }
 
-	//Number* ExecNum(Number* op1, Number* op2)
-	//{
-
-	//}
+	//		add sub	mul	div
+	//N+N	1	1	1	1
+	//P+P	1	1	0	0
+	//N+P	1	1	1	0
+	//P+N	1	1	1	1
 
 	shared_ptr<Operand> Execute(shared_ptr<Operand> a, shared_ptr<Operand> b = 0) const {
 		//cout << "EXEC ";printLex(a.get());printLex(b.get());
 		if (a == 0)
 			throw runtime_error("No arguments");
-		auto numA = dynamic_pointer_cast<Number>(a);
+		
 		if(argCount == 2)
 		{
+			
 			if (b == 0)
 				throw runtime_error("Not enough arguments");
+			auto numA = dynamic_pointer_cast<Number>(a);
 			auto numB = dynamic_pointer_cast<Number>(b);
+			auto polA = dynamic_pointer_cast<PolyLex>(a);
+			auto polB = dynamic_pointer_cast<PolyLex>(b);
 
-			if (func == OperatorType::Add)
+			if(numA && numB)
 			{
-				return make_shared<Number>(numA->getValue() + numB->getValue());
+				switch (func)
+				{
+				case OperatorType::Add:
+					return make_shared<Number>(numA->getValue() + numB->getValue());
+				case OperatorType::Sub:
+					return make_shared<Number>(numA->getValue() - numB->getValue());
+				case OperatorType::Mul:
+					return make_shared<Number>(numA->getValue() * numB->getValue());
+				case OperatorType::Div:
+					return make_shared<Number>(numA->getValue() / numB->getValue());
+				default:
+					throw runtime_error("Unsupported operation for <Num, Num>");
+				}
 			}
-			if (func == OperatorType::Sub)
+			if (polA&&polB)
 			{
-				return make_shared<Number>(numA->getValue() - numB->getValue());
+				switch (func)
+				{
+				case OperatorType::Add:
+					return make_shared<PolyLex>(polA->getPolynom() + polB->getPolynom());
+				case OperatorType::Sub:
+					return make_shared<PolyLex>(polA->getPolynom() - polB->getPolynom());
+				default:
+					throw runtime_error("Unsupported operation for <Poly, Poly>");
+				}
 			}
-			if (func == OperatorType::Mul)
+			if (numA && polB)
 			{
-				return make_shared<Number>(numA->getValue() * numB->getValue());
+				switch (func)
+				{
+				case OperatorType::Add:
+					return make_shared<PolyLex>(numA->getValue() + polB->getPolynom());
+				case OperatorType::Sub:
+					return make_shared<PolyLex>(numA->getValue() - polB->getPolynom());
+				case OperatorType::Mul:
+					return make_shared<PolyLex>(numA->getValue() * polB->getPolynom());
+				default:
+					throw runtime_error("Unsupported operation for <Poly, Poly>");
+				}
+			}
+			if (polA && numB)
+			{
+				switch (func)
+				{
+				case OperatorType::Add:
+					return make_shared<PolyLex>(polA->getPolynom() + numB->getValue());
+				case OperatorType::Sub:
+					return make_shared<PolyLex>(polA->getPolynom() - numB->getValue());
+				case OperatorType::Mul:
+					return make_shared<PolyLex>(polA->getPolynom() * numB->getValue());
+				case OperatorType::Div:
+					return make_shared<PolyLex>(polA->getPolynom()*( 1.0/ numB->getValue()));
+				default:
+					throw runtime_error("Unsupported operation for <Poly, Poly>");
+				}
 			}
 		}
 
@@ -169,11 +215,18 @@ void printLex(shared_ptr<Lexeme> l)
 		auto od = dynamic_pointer_cast<Operand>(l);
 		if (auto nu = dynamic_pointer_cast<Number> (od))
 			cout << "{" << nu->getValue() << "}";
+		else if (auto po = dynamic_pointer_cast<PolyLex> (od))
+		{
+			cout << "{" << po->getPolynom() << "}";
+		} else
+		{
+			cout << "{" << "OPERAND?" << "}";
+		}
 	}
 	else if (lt == LexemeType::Operator)
 	{
 		auto op = dynamic_pointer_cast<Operator>(l);
-		cout << "[OP" << static_cast<int>(op->getOperatorType()) << "]";
+		cout << "[" << OpSymbols [static_cast<int>(op->getOperatorType())] << "]";
 	}
 	else if (lt == LexemeType::ParOpen)
 	{
@@ -199,12 +252,22 @@ class LexBase
 	TableManager* tableman;
 
 public:
-	LexBase() = default;
+	LexBase(TableManager* polyTableman) :tableman(polyTableman) {};
 
 	~LexBase() {
 		//for (auto& pair : map) {
 		//	delete pair.second;
 		//}
+	}
+
+	bool checkIsInBase(string& name)
+	{
+		return map.find(name) != map.end();
+	}
+
+	void deleteLex(string& name)
+	{
+		map.erase(name);
 	}
 
 	void addNum(string name, double value)
@@ -217,19 +280,24 @@ public:
 			//cout << "ADDED VAR :" << nvar->getName() << ":" << endl;
 			return;
 		}
-		throw "ADD existing lexeme";
+		throw runtime_error("ADD existing lexeme");
 	}
 
-	void addPoly(string name)
+	shared_ptr<PolyLex> addPoly(const string& name)
 	{
-		auto* it = tableman->find(name);
+		
+
+		
+		Polynom* it = tableman->find(name);
 		if (it != nullptr)
 		{
-			map.emplace(name, make_shared<PolynomialRef>(it));
+			//cout << "ADD POLYNOM LEX TO BASE: " << *it << endl;
+			shared_ptr<PolyLex> newPoly = make_shared<PolyLex>(*it);
+			map.emplace(name, newPoly);
 			
-			return;
+			return newPoly;
 		}
-		throw "cant find Polynom";
+		throw runtime_error("cant find Polynom");
 	}
 
 	void addOperator(string name, int argCount, int priority,OperatorType optorType, Associativity associativity = Associativity::Left) {
@@ -237,7 +305,7 @@ public:
 		//cout << "ADDED OPERATOR: " << nOp->getName() << " with priority " << nOp->getPriority() << " and associativity " << (associativity == Associativity::Left ? "Left" : "Right") << endl;
 	}
 
-	shared_ptr<Lexeme> getLexeme(string name)
+	shared_ptr<Lexeme> getLexeme(const string& name)
 	{
 		auto it = map.find(name);
 		if (it != map.end())
@@ -257,6 +325,16 @@ public:
 	//	}
 	//	return lexemes;
 	//}
+
+	void printConstants()
+	{
+		for (const auto& pair : map) {
+			if(pair.second->getType() == LexemeType::Operand)
+				if (Operand* opnd = static_cast<Operand*>(pair.second.get()))
+					if(opnd->getType() == OperandType::Number)
+						cout << pair.first << "\t" << static_cast<Number*>(opnd)->getValue()<<endl;
+			}
+	}
 };
 
 
@@ -265,17 +343,20 @@ public:
 
 class Postfix
 {
-	LexBase base;
+	
 	string infix;
 	vector<shared_ptr<Lexeme>> postfix;
 	stack<shared_ptr<Lexeme>> opStack;
 	shared_ptr<Operand> result;
+	
+	
 
 public:
+	TableManager* tableman = nullptr;
+	LexBase base;
 
-	Postfix(bool importBasicOperators = true)
+	Postfix(TableManager* tablemanp = nullptr, bool importBasicOperators = true):tableman(tablemanp ? tablemanp : new TableManager), base(tableman)
 	{
-
 		if (importBasicOperators) {
 			base.addOperator("+", 2, 0, OperatorType::Add);
 			base.addOperator("-", 2, 0, OperatorType::Sub);
@@ -285,6 +366,22 @@ public:
 			base.addLexeme("(", LexemeType::ParOpen, 1);
 			base.addLexeme(")", LexemeType::ParClose, 1);
 		}
+	}
+
+	void addOperator(string name, int argCount, int priority, OperatorType optorType, Associativity associativity = Associativity::Left) {
+		base.addOperator(name, argCount, priority, optorType, associativity);
+	}
+
+	void addPolynom(const string& name, const string& polystr)
+	{
+		Polynom p = parsePoly(polystr);
+		//cout << "ADDING TO TABLES: " << name << " = " << polystr << " = " <<p<< endl;
+		tableman->add(name, p);
+		//cout << " = " << *tableman.find(name )<< endl;
+	}
+	void addConstant(const string& name, double val)
+	{
+		base.addNum(name, val);
 	}
 
 	void inputInfix(string infix_)
@@ -306,26 +403,29 @@ public:
 			//cout << "Got token " << token << endl;
 
 			if (lex == nullptr) {
-				// Если лексема не найдена, добавляем как новую переменную
+				// Если лексема не найдена, добавляем как новый операнд
 
 				if (token.find_first_of("()") != string::npos)
 					throw runtime_error("Variable name or number fused with parentheses");
 
 				// Попытаемся сразу определить если это число
+				
+				double num = NAN;
 				try {
-					double num = stod(token);
-					if (!isnan(num))
-					{
-						postfix.push_back(make_shared<Number>(num));
-						//cout << "CAN NUM " << num << endl;
-					}
-					else
-					{
-						base.addPoly(token);
-					}
+					num = stod(token);
 				}
-				catch (exception e) {}
-
+				catch( exception e){}
+					
+				if (!isnan(num))
+				{
+					postfix.push_back(make_shared<Number>(num));
+					//cout << "CAN NUM " << num << endl;
+				}
+				else
+				{
+					//cout << "FOUND POLY: " << token << endl;
+					postfix.push_back(base.addPoly(token));
+				}
 
 				//cout << "New var " << endl;
 			}
@@ -398,9 +498,6 @@ public:
 		//cout << "PARSING END\n";
 	}
 
-
-
-
 	string getInfix() { return infix; }
 	string GetPostfix()
 	{
@@ -414,70 +511,7 @@ public:
 		return res;
 	}
 
-	void addOperator(string name, int argCount, int priority, OperatorType optorType, Associativity associativity = Associativity::Left) {
-		base.addOperator(name, argCount, priority, optorType, associativity);
-	}
-
-	//Функционал с неопределёнными переменными и доопределением пока не поддерживатеся
-	
-	//void setVariable(const string& name, T value) {
-	//	Lexeme* lex = base.getLexeme(name);
-	//	if (lex && lex->getType() == LexemeType::var) {
-	//		dynamic_cast<Variable<T>*>(lex)->define(value);
-	//	}
-	//	else {
-	//		//cout << "Variable not found: " << name << endl;
-	//		throw logic_error("Variable not found: " + name);
-	//	}
-	//}
-	//
-	//void setVariables(const vector<pair<string, T>>& vars) {
-	//	for (const auto& var : vars) {
-	//		setVariable(var.first, var.second);
-	//	}
-	//}
-	//
-	//vector<string> getUndefinedVars() {
-	//	vector<string> undefinedVars;
-	//	for (const auto& lexemePair : base.getAllLexemes()) {
-	//		Lexeme* lexeme = lexemePair.second;
-	//		if (lexeme->getType() == LexemeType::var) {
-	//			Variable<T>* var = static_cast<Variable<T>*>(lexeme);
-	//			if (!var->isDefined()) {
-	//				undefinedVars.push_back(var->getName());
-	//			}
-	//		}
-	//	}
-	//	return undefinedVars;
-	//}
-	//
-	//vector<string> getOperatorNames() {
-	//	vector<string > ops;
-	//	for (const auto& lexemePair : base.getAllLexemes()) {
-	//		Lexeme* lexeme = lexemePair.second;
-	//		if (lexeme->getType() == LexemeType::op) {
-	//
-	//			ops.push_back(lexeme->getName());
-	//
-	//		}
-	//	}
-	//	return ops;
-	//}
-	//
-	//bool checkForUndefinedVars()
-	//{
-	//	for (const auto& lexemePair : base.getAllLexemes()) {
-	//		Lexeme* lexeme = lexemePair.second;
-	//		if (lexeme->getType() == LexemeType::var) {
-	//			//Variable<T>* var = static_cast<Variable<T>*>(lexeme);
-	//			if (!lexeme->isDefined()) {
-	//				//cout << "ud "<< lexeme->getName() << endl;
-	//				return true;
-	//			}
-	//		}
-	//	}
-	//	return false;
-	//}
+#define CALCPRINT
 
 	shared_ptr<Operand> Calculate()
 	{
@@ -518,6 +552,9 @@ public:
 					auto op2 = calcStack.top(); calcStack.pop();
 					auto op1 = calcStack.top(); calcStack.pop();
 
+					// Выполняем операцию и помещаем результат в стек
+					calcStack.push(op->Execute(op1, op2));
+
 #ifdef CALCPRINT
 
 
@@ -527,12 +564,11 @@ public:
 					for (int k = 0;k < cc - 1;k++) { cout << "\t"; }
 					cout << "<";
 					printLex(op);printLex(op1);printLex(op2);
-					cout << ">\t";
+					cout << " = "; printLex(calcStack.top());cout<<"> \t";
 
 #endif // CALCPRINT
 
-					// Выполняем операцию и помещаем результат в стек
-					calcStack.push(op->Execute(op1, op2));
+					
 				}
 				else {
 					throw logic_error("Operator arguments count not supported");
@@ -552,6 +588,20 @@ public:
 		return n->getValue();
 	}
 
+	Polynom getPolynomResult()
+	{
+		auto p = dynamic_cast<PolyLex*>(result.get());
+		if(!p)
+		{
+			Number* n = dynamic_cast<Number*>(result.get());
+			if (!n)
+				throw runtime_error("Result is not Polynom or Number");
+			return n->getValue();
+		}
+		return p->getPolynom();
+		
+	}
+
 	~Postfix()
 	{
 		//cout << "POSTFIX DELETING\n";
@@ -561,5 +611,67 @@ public:
 	//	}
 	//	postfix.clear();
 	}
+
+	//Функционал с неопределёнными переменными и доопределением пока не поддерживатеся
+
+//void setVariable(const string& name, T value) {
+//	Lexeme* lex = base.getLexeme(name);
+//	if (lex && lex->getType() == LexemeType::var) {
+//		dynamic_cast<Variable<T>*>(lex)->define(value);
+//	}
+//	else {
+//		//cout << "Variable not found: " << name << endl;
+//		throw logic_error("Variable not found: " + name);
+//	}
+//}
+//
+//void setVariables(const vector<pair<string, T>>& vars) {
+//	for (const auto& var : vars) {
+//		setVariable(var.first, var.second);
+//	}
+//}
+//
+//vector<string> getUndefinedVars() {
+//	vector<string> undefinedVars;
+//	for (const auto& lexemePair : base.getAllLexemes()) {
+//		Lexeme* lexeme = lexemePair.second;
+//		if (lexeme->getType() == LexemeType::var) {
+//			Variable<T>* var = static_cast<Variable<T>*>(lexeme);
+//			if (!var->isDefined()) {
+//				undefinedVars.push_back(var->getName());
+//			}
+//		}
+//	}
+//	return undefinedVars;
+//}
+//
+//vector<string> getOperatorNames() {
+//	vector<string > ops;
+//	for (const auto& lexemePair : base.getAllLexemes()) {
+//		Lexeme* lexeme = lexemePair.second;
+//		if (lexeme->getType() == LexemeType::op) {
+//
+//			ops.push_back(lexeme->getName());
+//
+//		}
+//	}
+//	return ops;
+//}
+//
+//bool checkForUndefinedVars()
+//{
+//	for (const auto& lexemePair : base.getAllLexemes()) {
+//		Lexeme* lexeme = lexemePair.second;
+//		if (lexeme->getType() == LexemeType::var) {
+//			//Variable<T>* var = static_cast<Variable<T>*>(lexeme);
+//			if (!lexeme->isDefined()) {
+//				//cout << "ud "<< lexeme->getName() << endl;
+//				return true;
+//			}
+//		}
+//	}
+//	return false;
+//}
+
 };
 

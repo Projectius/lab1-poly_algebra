@@ -1,6 +1,5 @@
 ﻿#include "polynom.h"
 
-
 unsigned MAX_P = 1 + 9; // 1 + max degree
 
 // Monom
@@ -8,7 +7,7 @@ unsigned Monom::encode(unsigned x, unsigned y, unsigned z) {
     return x + y * MAX_P + z * MAX_P * MAX_P;
 }
 
-unsigned Monom::degOf(unsigned var_ind) {
+unsigned const Monom::degOf(unsigned var_ind) const {
     switch (var_ind) {
     case 1:
         return degs % MAX_P;
@@ -21,14 +20,19 @@ unsigned Monom::degOf(unsigned var_ind) {
     }
 }
 
-Monom::Monom(int coef, unsigned x, unsigned y, unsigned z) {
+Monom::Monom(double coef, unsigned x, unsigned y, unsigned z) {
     degs = encode(x, y, z);
     c = coef;
     if ((x >= MAX_P) || (y >= MAX_P) || (z >= MAX_P))
         throw "Monome variable: too large degree";
 }
 
-int Monom::coef() { return c; }
+Monom::Monom(double coef, Monom& mon) {
+    degs = mon.degs;
+    c = coef;
+}
+
+double Monom::coef() const { return c; }
 
 mNode::mNode(const Monom m) : m(m) {}
 
@@ -85,18 +89,21 @@ void Polynom::insert(const Monom mon) {
     n->next = pnext;
 }
 
-Polynom::Polynom() { head = new mNode(Monom(0, 0, 0, 0)); }
+Polynom::Polynom() { head = new mNode(Monom(0, 0, 0, 0)); back = head; }
+Polynom::Polynom(double n) { head = new mNode(Monom(n, 0, 0, 0)); back = head; }
 
 void Polynom::copyFrom(const Polynom& other) {
     head = new mNode(other.head->m);
+    
     mNode* currentOther = other.head->next; // Начинаем с первого узла после head
     mNode* currentThis = head;
 
     while (currentOther) {
-        currentThis->next = new mNode(currentOther->m);
+        back = currentThis->next = new mNode(currentOther->m);
         currentThis = currentThis->next;
         currentOther = currentOther->next;
     }
+
 }
 
 Polynom::Polynom(const Polynom& y) {
@@ -152,22 +159,23 @@ Polynom& Polynom::operator=(Polynom&& other) noexcept {
 
     // Перехват ресурсов
     head = other.head;
+    back = other.back;
     other.head = nullptr; // Обнуляем указатель other
-
+    other.back = nullptr;
     return *this;
 }
 
 
-Monom operator*(Monom& mon, int k) {
+Monom operator*(const Monom& mon, double k) {
     Monom a;
     a.degs = mon.degs;
     a.c = mon.c * k;
     return a;
 }
 
-ostream& operator<<(ostream& out, Monom& m) {
+ostream& operator<<(ostream& out, const Monom& m) {
     bool a = 0;
-    out << m.c;
+    out << m.coef();
     if (m.degOf(1) || a)
         out << "x" << m.degOf(1);
     if (m.degOf(2) || a)
@@ -177,7 +185,8 @@ ostream& operator<<(ostream& out, Monom& m) {
     return out;
 }
 
-Polynom operator+(Polynom& p1, Polynom& p2) {
+template <typename Op>
+Polynom combinePolynoms(const Polynom& p1, const Polynom& p2, Op op) {
     Polynom result;
     mNode* p1Node = p1.head;
     mNode* p2Node = p2.head;
@@ -200,37 +209,82 @@ Polynom operator+(Polynom& p1, Polynom& p2) {
             p2Node = p2Node->next;
         }
         else {
-            int newCoef = p1Node->m.c + p2Node->m.c;
-            if (newCoef != 0) {
-                result.insert(Monom(newCoef,
-                    p1Node->m.degOf(1),
-                    p1Node->m.degOf(2),
-                    p1Node->m.degOf(3)));
+            double newCoef = op(p1Node->m.c, p2Node->m.c);
+            if (newCoef != 0.0) {
+                result.insert(Monom(newCoef, p1Node->m));
             }
             p1Node = p1Node->next;
             p2Node = p2Node->next;
         }
     }
+    /*if (result.back->m.degs != 0)
+        throw("Polynom BACK invalid\n");*/
     return result;
 }
 
-Polynom operator*(Polynom& p1, int k) {
-    Polynom result;
-    mNode* p = p1.head;
-    while (p && ((p->m).coef())) {
-        result.insert((p->m) * k);
-        p = p->next;
+Polynom operator+(const Polynom& p1, const Polynom& p2) {
+    return combinePolynoms(p1, p2, [](double a, double b) { return a + b; });
+}
+
+Polynom operator+(const Polynom& p, double n)
+{
+    Polynom result(p);
+    result.back->m.c += n;
+    return result;
+}
+
+Polynom operator+(double n, const Polynom& p)
+{
+    return p + n;
+}
+
+Polynom operator-(const Polynom& p1, const Polynom& p2) {
+    return combinePolynoms(p1, p2, [](double a, double b) { return a - b; });
+}
+
+Polynom operator-(const Polynom& p, double n)
+{
+    Polynom result(p);
+    result.back->m.c -= n;
+    return result;
+}
+
+Polynom operator-(double n, const Polynom& p)
+{
+    return (p*(-1)) + n;
+}
+
+Polynom operator*(const Polynom& p, double k) {
+    //Polynom result;
+    //mNode* p = p1.head;
+    //while (p && ((p->m).coef())) {
+    //    result.insert((p->m) * k);
+    //    p = p->next;
+    //}
+    //return result;
+
+    Polynom result(p);
+    mNode* h = result.head;
+    while (h)
+    {
+        h->m.c *= k;
+        h = h->next;
     }
     return result;
 }
 
-Polynom operator-(Polynom& p1, Polynom& p2) {
-    Polynom neg = p2 * (-1);
-    return p1 + neg;
+Polynom operator*(double k, const Polynom& p ) {
+    return p * k;
 }
 
-ostream& operator<<(ostream& os, Polynom& n) {
+
+
+ostream& operator<<(ostream& os, const Polynom& n) {
     mNode* p = n.head;
+    if (!p) {
+        os << "INVALID_POLYNOM, HEAD = nullptr!\n";
+        return os;
+    }
     if ((!p->next) && (!p->m.coef())) {
         os << "0";
         return os;
@@ -247,4 +301,114 @@ ostream& operator<<(ostream& os, Polynom& n) {
     return os;
 }
 
+bool operator==(const Monom& m1, const Monom& m2) {
+    return (m1.c == m2.c) && (m1.degs == m2.degs);
+}
 
+bool operator==(const Polynom& p1, const Polynom& p2) {
+    mNode* current1 = p1.head;
+    mNode* current2 = p2.head;
+
+    // Сравниваем каждый узел
+    while (current1 != nullptr && current2 != nullptr) {
+        if (!(current1->m == current2->m)) {
+            return false;
+        }
+        current1 = current1->next;
+        current2 = current2->next;
+    }
+
+
+    return (current1 == nullptr && current2 == nullptr);
+}
+
+Polynom parsePoly(const string& input) {
+    Polynom result;
+    istringstream stream(input);
+    char ch;
+    double coef = 0;
+    unsigned x = 0, y = 0, z = 0;
+    bool negative = false;
+
+    while (!stream.eof()) {
+        //cout << "!" << endl;
+        //cout << stream.str() << endl;
+        coef = 0; x = 0; y = 0; z = 0;
+        negative = false;
+
+        // Читаем знак перед мономом
+        if (stream.peek() == '+') {
+            stream.get();
+        }
+        else if (stream.peek() == '-') {
+            stream.get();
+            negative = true;
+        }
+
+        stream >> ws;
+
+        // Читаем коэффициент
+        while (isdigit(stream.peek())) {
+            coef = coef * 10 + (stream.get() - '0');
+        }
+        if (negative) coef = -coef;
+
+        // Если коэффициент отсутствует, он равен 1 или -1
+        if (coef == 0) coef = (negative ? -1 : 1);
+
+        // Читаем степени переменных
+        while (isalpha(stream.peek())) {
+            //cout << "pvar: " << char(stream.peek()) << endl;
+            ch = stream.get();
+            unsigned* target = nullptr;
+
+            if (ch == 'x') target = &x;
+            else if (ch == 'y') target = &y;
+            else if (ch == 'z') target = &z;
+            else throw runtime_error("Unexpected variable in input: " + ch);
+
+            if (isdigit(stream.peek())) {
+                while (isdigit(stream.peek())) {
+                    //cout << "pdigit: " << char(stream.peek()) << endl;
+                    *target = *target * 10 + (stream.get() - '0');
+                }
+            }
+            else {
+                *target = 1; // Если степень не указана то она равна 1
+            }
+        }
+
+
+        result.insert(Monom(coef, x, y, z));
+
+        // Пропускаем пробелы после монома
+        //cout << stream.str() << endl;
+       /* while (stream.peek() == ' ')
+        {
+            cout << "ws ";
+            stream.get();
+        }*/
+        stream >> ws;
+
+        //cout << stream.str() << endl;
+
+        if (stream.peek() != '+' && stream.peek() != '-' && !stream.eof()) {
+            throw runtime_error("Unexpected character in input: " + char(stream.peek()));
+        }
+    }
+
+    return result;
+}
+
+double CalcInPoint(Polynom& p, double x, double y, double z)
+{
+    double result = 0;
+    mNode* h = p.head;
+    while (h)
+    {
+        Monom& m = h->m;
+        result += m.c * pow(x, m.degOf(1)) * pow(y, m.degOf(2)) * pow(z, m.degOf(3));
+        h = h->next;
+    }
+    return result;
+}

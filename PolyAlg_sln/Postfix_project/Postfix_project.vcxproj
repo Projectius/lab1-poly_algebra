@@ -104,7 +104,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../../include;../../gtest</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../include;../../source;../../gtest</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -130,6 +130,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\source\polynom.cpp" />
+    <ClCompile Include="..\..\source\tableman.cpp" />
+    <ClCompile Include="..\..\source\tables.cpp" />
     <ClCompile Include="..\..\tests\test_main.cpp" />
     <ClCompile Include="..\..\tests\test_postfix.cpp" />
   </ItemGroup>
