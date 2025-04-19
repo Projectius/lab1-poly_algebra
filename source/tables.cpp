@@ -1,6 +1,5 @@
 #include "tables.h"
-#include <functional>
-#include <stdexcept>
+
 
 using namespace std;
 
@@ -16,6 +15,11 @@ const char* const TABLE_NAMES[] = {
 const int TABLE_COUNT = sizeof(TABLE_NAMES) / sizeof(TABLE_NAMES[0]);
 
 Table::Table(Polynom*, size_t) {}
+
+void Table::print() const
+{
+    cout << "TABLE PRINT" << endl;
+}
 
 // ------------------- LinearArrayTable -------------------
 LinearArrayTable::LinearArrayTable() : capacity(10), count(0) {
@@ -62,6 +66,11 @@ void LinearArrayTable::remove(const string& name) {
             --count;
             return;
         }
+}
+
+void LinearArrayTable::print() const {
+    for (size_t i = 0; i < count; ++i)
+        cout << setw(15) << entries[i].key << " | " << *entries[i].value << endl;
 }
 
 // ------------------- LinearListTable -------------------
@@ -112,6 +121,11 @@ void LinearListTable::remove(const string& name) {
         prev = curr;
         curr = curr->next;
     }
+}
+
+void LinearListTable::print() const {
+    for (ListNode* node = head; node; node = node->next)
+        cout << setw(15) << node->key << " | " << *node->value << endl;
 }
 
 // ------------------- OrderedArrayTable -------------------
@@ -170,6 +184,11 @@ void OrderedArrayTable::remove(const string& name) {
     for (size_t i = pos; i < count - 1; ++i)
         entries[i] = entries[i + 1];
     --count;
+}
+
+void OrderedArrayTable::print() const {
+    for (size_t i = 0; i < count; ++i)
+        cout << setw(15) << entries[i].key << " | " << *entries[i].value << endl;
 }
 
 // ------------------- TreeTable -------------------
@@ -235,6 +254,17 @@ void TreeTable::add(const string& name, const Polynom* pol) {
 
 void TreeTable::remove(const string& name) {
     root = removeNode(root, name);
+}
+
+void TreeTable::recprint(TreeNode* node) const {
+    if (!node) return;
+    recprint(node->left);
+    cout << setw(15) << node->key << " | " << *node->value << endl;;
+    recprint(node->right);
+}
+
+void TreeTable::print() const {
+    recprint(root);
 }
 
 // ------------------- OpenHashTable -------------------
@@ -316,6 +346,12 @@ void OpenHashTable::remove(const string& name) {
     }
 }
 
+void OpenHashTable::print() const {
+    for (size_t i = 0; i < capacity; ++i)
+        if (table[i].state == OCCUPIED)
+            cout << setw(15) << table[i].key << " | " << *table[i].value << endl;
+}
+
 // ------------------- ListHashTable -------------------
 ListHashTable::ListHashTable() : capacity(16), count(0) {
     buckets = new ChainNode * [capacity];
@@ -380,5 +416,15 @@ void ListHashTable::remove(const string& name) {
         }
         prev = node;
         node = node->next;
+    }
+}
+
+void ListHashTable::print() const {
+    for (size_t i = 0; i < capacity; ++i) {
+        ChainNode* node = buckets[i];
+        while (node) {
+            cout << setw(15) << node->key << " | " << *node->value << endl;
+            node = node->next;
+        }
     }
 }

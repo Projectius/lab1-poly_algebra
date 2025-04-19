@@ -60,8 +60,7 @@ TableManager::~TableManager()
 
 void TableManager::PrintContent()
 { 
-	for (auto& it : names)
-		cout << it <<"\t"<< * t->find(it) << endl;
+	t->print();
 }
 
 int TableManager::getSelected()

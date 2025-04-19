@@ -2,6 +2,10 @@
 #pragma once
 #include "polynom.h"
 #include <string>
+//#include <functional>
+//#include <stdexcept>
+#include <iostream>
+#include <iomanip>
 
 using namespace std;
 
@@ -16,6 +20,7 @@ public:
     virtual Polynom* find(const string& name) = 0;
     virtual void add(const string& name, const Polynom* pol) = 0;
     virtual void remove(const string& name) = 0;
+    virtual void print() const;
 };
 
 class LinearArrayTable : public Table {
@@ -32,6 +37,7 @@ public:
     Polynom* find(const string& name) override;
     void add(const string& name, const Polynom* pol) override;
     void remove(const string& name) override;
+    void print() const override;
 };
 
 class LinearListTable : public Table {
@@ -45,6 +51,7 @@ public:
     Polynom* find(const string& name) override;
     void add(const string& name, const Polynom* pol) override;
     void remove(const string& name) override;
+    void print() const override;
 };
 
 class OrderedArrayTable : public Table {
@@ -62,6 +69,7 @@ public:
     Polynom* find(const string& name) override;
     void add(const string& name, const Polynom* pol) override;
     void remove(const string& name) override;
+    void print() const override;
 };
 
 class TreeTable : public Table {
@@ -76,6 +84,8 @@ protected:
     TreeNode* addNode(TreeNode* node, const string& key, const Polynom* pol);
     TreeNode* findNode(TreeNode* node, const string& key);
     TreeNode* removeNode(TreeNode* node, const string& key);
+    void recprint(TreeNode* node) const;
+    void print() const override;
     void deleteTree(TreeNode* node);
 
 public:
@@ -106,6 +116,7 @@ public:
     Polynom* find(const string& name) override;
     void add(const string& name, const Polynom* pol) override;
     void remove(const string& name) override;
+    void print() const override;
 };
 
 class ListHashTable : public Table {
@@ -126,4 +137,5 @@ public:
     Polynom* find(const string& name) override;
     void add(const string& name, const Polynom* pol) override;
     void remove(const string& name) override;
+    void print() const override;
 };
