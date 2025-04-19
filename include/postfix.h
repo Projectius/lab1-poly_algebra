@@ -297,7 +297,7 @@ public:
 			
 			return newPoly;
 		}
-		throw runtime_error("cant find Polynom");
+		throw runtime_error("cant find Polynom: " + name);
 	}
 
 	void addOperator(string name, int argCount, int priority,OperatorType optorType, Associativity associativity = Associativity::Left) {

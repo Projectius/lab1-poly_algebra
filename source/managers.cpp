@@ -12,11 +12,13 @@ CommandManager::CommandManager():postfix(&tableman), state(Cmds::Menu)
 
 void CommandManager::LoopInputProcessing()
 {
-	cout << "Avaible commands: manu, polynoms, tables, selecttable, constants, constin, polyin, polycalc, del, expr, saveres" << endl;
+	string stnames [] = {"Menu", "Const name input", "Const number value input", "Polynomial name input","Polynomial value input","Calculate polynom value in point", "Delete const or poly by name", "Expression input","Saving last expr result","Selecting table"};
+	cout << "Avaible commands: menu, polynoms, tables, selecttable, constants, constin, polyin, polycalc, del, expr, saveres" << endl;
 	string name;
 	shared_ptr<Operand> result;
 	while (true)
 	{
+		cout << "(State: " << stnames[(int)state] << ")\n";
 		getline(cin, inp);
 
 		if (inp == "menu")

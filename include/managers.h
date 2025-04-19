@@ -10,6 +10,7 @@
 
 enum class Cmds{Menu, ConstNameIn,ConstValIn, PolyNameIn, PolyValIn, PolyCalc,DelName, ExprIn, ResSave, SelectTable};
 
+
 class CommandManager
 {
 	TableManager tableman;
