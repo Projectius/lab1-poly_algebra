@@ -118,7 +118,7 @@ public:
 
 	//		add sub	mul	div
 	//N+N	1	1	1	1
-	//P+P	1	1	0	0
+	//P+P	1	1	1	0
 	//N+P	1	1	1	0
 	//P+N	1	1	1	1
 
@@ -161,6 +161,8 @@ public:
 					return make_shared<PolyLex>(polA->getPolynom() + polB->getPolynom());
 				case OperatorType::Sub:
 					return make_shared<PolyLex>(polA->getPolynom() - polB->getPolynom());
+				case OperatorType::Mul:
+					return make_shared<PolyLex>(polA->getPolynom() * polB->getPolynom());
 				default:
 					throw runtime_error("Unsupported operation for <Poly, Poly>");
 				}

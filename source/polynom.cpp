@@ -40,53 +40,48 @@ mNode::mNode(const Monom m) : m(m) {}
 // Polynom
 //
 
-void Polynom::insert(const Monom mon) {
-    if (mon.c == 0)
-        return;
-    if ((head->m.degs == 0U) && (mon.degs == 0U)) {
-        head->m.c = mon.c;
+void Polynom::insert(const Monom& mon) {
+    // Если коэффициент монома нулевой, игнорируем вставку
+    if (mon.c == 0.0) {
         return;
     }
 
-    mNode* p = nullptr;
-    mNode* pnext = head;
+    mNode** current = &head; // Указатель для изменения связей
+    bool exists = false;
 
-    if (pnext && (pnext->m.degs > mon.degs)) {
-        while (pnext) {
-            p = pnext;
-            pnext = p->next;
-            if (pnext && (pnext->m.degs <= mon.degs))
-                break;
+    // Ищем позицию для вставки или объединения
+    while (*current != nullptr) {
+        if ((*current)->m.degs == mon.degs) {
+            // Объединяем коэффициенты
+            (*current)->m.c += mon.c;
+
+            // Удаляем узел, если коэффициент стал нулевым (но не последний)
+            if ((*current)->m.c == 0.0 && (*current)->next != nullptr) {
+                mNode* toDelete = *current;
+                *current = toDelete->next;
+                delete toDelete;
+            }
+            exists = true;
+            break;
         }
-    }
-    if (pnext && (pnext->m.degs == mon.degs)) {
-        if (mon.degs == 0U) {
-            pnext->m.c = mon.c;
-            return;
+        else if ((*current)->m.degs < mon.degs) {
+            // Вставляем перед текущим узлом (степени упорядочены по убыванию)
+            break;
         }
-        throw "Inserting existing monomial";
+        current = &((*current)->next);
     }
 
-    mNode* n = new mNode(mon);
-    if (p)
-        p->next = n;
-    else {
-        if (pnext) {
-            if (mon.degs > head->m.degs) {
-                p = head;
-                head = n;
-                n->next = p;
-                return;
-            }
-            else {
-                head->next = n;
-                return;
-            }
-        }
-        else
-            throw "No polynom head!";
+    // Вставляем новый узел, если не было совпадения
+    if (!exists) {
+        mNode* newNode = new mNode(mon);
+        newNode->next = *current;
+        *current = newNode;
     }
-    n->next = pnext;
+
+    // Гарантируем, что полином не пуст (минимум нулевой моном)
+    if (head == nullptr) {
+        head = new mNode(Monom(0.0, 0, 0, 0));
+    }
 }
 
 Polynom::Polynom() { head = new mNode(Monom(0, 0, 0, 0)); back = head; }
@@ -171,6 +166,13 @@ Monom operator*(const Monom& mon, double k) {
     a.degs = mon.degs;
     a.c = mon.c * k;
     return a;
+}
+
+Monom operator*(const Monom& m1, const Monom& m2) {
+    unsigned x = m1.degOf(1) + m2.degOf(1);
+    unsigned y = m1.degOf(2) + m2.degOf(2);
+    unsigned z = m1.degOf(3) + m2.degOf(3);
+    return Monom(m1.c * m2.c, x, y, z);
 }
 
 ostream& operator<<(ostream& out, const Monom& m) {
@@ -277,7 +279,23 @@ Polynom operator*(double k, const Polynom& p ) {
     return p * k;
 }
 
+Polynom operator*(const Polynom& p1, const Polynom& p2) {
+    Polynom result;
+    mNode* currentP1 = p1.head;
 
+    // Перемножаем каждый моном первого полинома с каждым мономом второго
+    while (currentP1 != nullptr) {
+        mNode* currentP2 = p2.head;
+        while (currentP2 != nullptr) {
+            Monom product = currentP1->m * currentP2->m;
+            result.insert(product); // insert объединит одинаковые степени
+            currentP2 = currentP2->next;
+        }
+        currentP1 = currentP1->next;
+    }
+
+    return result;
+}
 
 ostream& operator<<(ostream& os, const Polynom& n) {
     mNode* p = n.head;

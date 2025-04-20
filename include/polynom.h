@@ -30,6 +30,7 @@ public:
     friend Polynom operator*(const Polynom& p, double k);
 
     friend Monom operator*(const Monom&, double);
+    friend Monom operator*(const Monom& m1, const Monom& m2);
 
     friend bool operator==(const Monom& m1, const Monom& m2);
 
@@ -52,7 +53,7 @@ class Polynom {
 
     void copyFrom(const Polynom& other);
 public:
-    void insert(const Monom mon);
+    void insert(const Monom& mon);
 
     ~Polynom();
     Polynom();
@@ -78,6 +79,7 @@ public:
     friend Polynom operator-(const Polynom& p, double n);
     friend Polynom operator*(const Polynom& p1, double k);
     friend Polynom operator*(double k, const Polynom& p);
+    friend Polynom operator*(const Polynom& p1, const Polynom& p2);
 
     friend bool operator==(const Polynom& p1, const Polynom& p2); 
 
@@ -86,6 +88,8 @@ public:
 
 // Объявления перегрузок операторов
 Monom operator*(Monom& mon, double k);
+Monom operator*(const Monom& m1, const Monom& m2);
+
 ostream& operator<<(ostream& out, const Monom& m);
 Polynom operator+(const Polynom& p1, const Polynom& p2);
 Polynom operator+(const Polynom& p, double n);
@@ -95,6 +99,7 @@ Polynom operator-(const Polynom& p, double n);
 Polynom operator-(double n, const Polynom& p);
 Polynom operator*(const Polynom& p1, double k);
 Polynom operator*(double k, const Polynom& p);
+Polynom operator*(const Polynom& p1, const Polynom& p2);
 
 ostream& operator<<(ostream& os, const Polynom& n);
 
