@@ -34,6 +34,7 @@ public:
 
     friend bool operator==(const Monom& m1, const Monom& m2);
 
+
     friend double CalcInPoint(Polynom& p, double x, double y, double z);
 };
 
@@ -82,6 +83,7 @@ public:
     friend Polynom operator*(const Polynom& p1, const Polynom& p2);
 
     friend bool operator==(const Polynom& p1, const Polynom& p2); 
+    friend bool operator!=(const Polynom& p1, const Polynom& p2);
 
     friend double CalcInPoint(Polynom& p, double x, double y, double z);
 };
@@ -105,6 +107,7 @@ ostream& operator<<(ostream& os, const Polynom& n);
 
 bool operator==(const Monom& m1, const Monom& m2);
 bool operator==(const Polynom& p1, const Polynom& p2);
+bool operator!=(const Polynom& p1, const Polynom& p2);
 
 Polynom parsePoly(const string& input);
 

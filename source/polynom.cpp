@@ -177,7 +177,8 @@ Monom operator*(const Monom& m1, const Monom& m2) {
 
 ostream& operator<<(ostream& out, const Monom& m) {
     bool a = 0;
-    out << m.coef();
+    if(m.coef()!=1)
+        out << m.coef();
     if (m.degOf(1) || a)
         out << "x" << m.degOf(1);
     if (m.degOf(2) || a)
@@ -257,21 +258,20 @@ Polynom operator-(double n, const Polynom& p)
 }
 
 Polynom operator*(const Polynom& p, double k) {
-    //Polynom result;
-    //mNode* p = p1.head;
-    //while (p && ((p->m).coef())) {
-    //    result.insert((p->m) * k);
-    //    p = p->next;
-    //}
-    //return result;
-
+    if (k == 0)
+        return 0;
     Polynom result(p);
+    //cout << "res = " << result << endl;
     mNode* h = result.head;
     while (h)
     {
+        //cout << h->m << " - > ";
         h->m.c *= k;
+        //cout << h->m << endl;
         h = h->next;
+        
     }
+    //cout << "*res = " << result << endl;
     return result;
 }
 
@@ -338,6 +338,10 @@ bool operator==(const Polynom& p1, const Polynom& p2) {
 
 
     return (current1 == nullptr && current2 == nullptr);
+}
+
+bool operator!=(const Polynom& p1, const Polynom& p2) {
+    return !(p1 == p2);
 }
 
 Polynom parsePoly(const string& input) {
