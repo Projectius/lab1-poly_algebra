@@ -166,16 +166,17 @@ void CommandManager::LoopInputProcessing()
 				state = Cmds::Menu;
 				break;
 			case Cmds::DelName:
-				if (postfix.base.checkIsInBase(inp))
-				{
-					postfix.base.deleteLex(inp);
-					
-				}
-				else if (tableman.find(inp))
+				if (tableman.find(inp))
 				{
 					postfix.base.deleteLex(inp);
 					tableman.remove(inp);
 				}
+				else if (postfix.base.checkIsInBase(inp))
+				{
+					postfix.base.deleteLex(inp);
+					
+				}
+				
 				else
 				{
 					cout << "cant find" << name << endl;
