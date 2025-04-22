@@ -520,6 +520,12 @@ public:
 #ifdef CALCPRINT
 		int cc = 0;
 		cout << "CALCULATING\n";
+		for (auto lexeme : postfix) {
+
+			printLex(lexeme);
+			cout << "\t"; cc++;
+		}
+		cout << endl;
 #endif
 		/*if (checkForUndefinedVars())
 			throw logic_error("Calculating when some variables are not defined");*/
@@ -565,7 +571,7 @@ public:
 					cc -= 2;
 					for (int k = 0;k < cc - 1;k++) { cout << "\t"; }
 					cout << "<";
-					printLex(op);printLex(op1);printLex(op2);
+					printLex(op1);printLex(op2);printLex(op);
 					cout << " = "; printLex(calcStack.top());cout<<"> \t";
 
 #endif // CALCPRINT
